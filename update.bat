@@ -1,1 +1,2 @@
-git log -1 --stat > commit_changes.txt
+git log -1 --stat --patch > commit_changes.txt
+

@@ -1,60 +1,88 @@
-commit 2c79c1144b7c328c8d231e66c4a249863f49b83f
+commit 05244588aa7d6a3a1a3f5be8de94f8bbec183a8d
 Author: AroliSG <58828449+AroliSG@users.noreply.github.com>
-Date:   Mon Oct 14 22:54:51 2024 -0400
+Date:   Mon Oct 14 22:56:06 2024 -0400
 
-    lot of changes
-    
-    more changes in transition to x4
+    Update commit_changes.txt
+---
+ commit_changes.txt | 72 +++++++++++++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 58 insertions(+), 14 deletions(-)
 
- .vscode/settings.json                              |   7 +
- commit_changes.txt                                 |  16 +
- dependency-reduced-pom.xml                         |  35 ++
- pom.xml                                            |  19 +-
- .../github/newk5/vcmp/nodejs/plugin/Context.java   |   7 +-
- .../vcmp/nodejs/plugin/ServerEventHandler.java     | 147 ++++----
- .../nodejs/plugin/proxies/CheckpointProxy.java     |  32 +-
- .../nodejs/plugin/proxies/GameObjectProxy.java     |  29 +-
- .../vcmp/nodejs/plugin/proxies/PickupProxy.java    |  28 +-
- .../vcmp/nodejs/plugin/proxies/PlayerProxy.java    |  77 +++--
- .../vcmp/nodejs/plugin/proxies/ServerProxy.java    | 113 +++---
- .../vcmp/nodejs/plugin/proxies/VehicleProxy.java   |  29 +-
- .../vcmp/nodejs/plugin/util/EntityConverter.java   |  36 +-
- .../vcmp/nodejs/plugin/util/FileResourceUtils.java |  21 +-
- .../vcmp/nodejs/plugin/util/PojoConverter.java     |  32 --
- src/main/resources/EventHandler.js                 | 167 +++++++++
- src/main/resources/Pickup.js                       |   2 +-
- src/main/resources/Player.js                       | 194 ++++++-----
- src/main/resources/Server.js                       | 232 +++++++------
- src/main/resources/VCMPGlobals.js                  |  27 +-
- target/classes/Checkpoint.js                       |  48 +++
- target/classes/CoordBlipInfo.js                    |  20 ++
- target/classes/EventHandler.js                     | 167 +++++++++
- target/classes/Object.js                           |  40 +++
- target/classes/Pickup.js                           |  35 ++
- target/classes/Player.js                           | 126 +++++++
- target/classes/Server.js                           | 145 ++++++++
- target/classes/VCMPGlobals.js                      | 379 +++++++++++++++++++++
- target/classes/VCMPStream.js                       |  85 +++++
- target/classes/Vehicle.js                          |  87 +++++
- target/classes/byte-buffer.min.js                  |  10 +
- .../github/newk5/vcmp/nodejs/plugin/Context.class  | Bin 0 -> 1997 bytes
- .../vcmp/nodejs/plugin/PlayerUpdateEvents.class    | Bin 0 -> 2842 bytes
- .../newk5/vcmp/nodejs/plugin/SavedPlayerData.class | Bin 0 -> 1819 bytes
- .../vcmp/nodejs/plugin/ServerEventHandler.class    | Bin 0 -> 35757 bytes
- .../nodejs/plugin/proxies/CheckpointProxy.class    | Bin 0 -> 7631 bytes
- .../nodejs/plugin/proxies/GameObjectProxy.class    | Bin 0 -> 7199 bytes
- .../vcmp/nodejs/plugin/proxies/PickupProxy.class   | Bin 0 -> 6719 bytes
- .../vcmp/nodejs/plugin/proxies/PlayerProxy.class   | Bin 0 -> 12235 bytes
- .../vcmp/nodejs/plugin/proxies/ServerProxy.class   | Bin 0 -> 20692 bytes
- .../vcmp/nodejs/plugin/proxies/VehicleProxy.class  | Bin 0 -> 11482 bytes
- .../vcmp/nodejs/plugin/util/EntityConverter.class  | Bin 0 -> 3072 bytes
- .../nodejs/plugin/util/FileResourceUtils.class     | Bin 0 -> 2461 bytes
- .../vcmp/nodejs/plugin/util/PojoConverter.class    | Bin 0 -> 1327 bytes
- target/classes/tinylog.properties                  |   5 +
- target/maven-archiver/pom.properties               |   3 +
- .../compile/default-compile/createdFiles.lst       |  13 +
- .../compile/default-compile/inputFiles.lst         |  12 +
- target/nodejs-vcmp-plugin.jar                      | Bin 0 -> 53378752 bytes
- target/original-nodejs-vcmp-plugin.jar             | Bin 0 -> 69651 bytes
- update.bat                                         |   1 +
- 51 files changed, 1974 insertions(+), 452 deletions(-)
+diff --git a/commit_changes.txt b/commit_changes.txt
+index 06d81b0..875bf97 100644
+--- a/commit_changes.txt
++++ b/commit_changes.txt
+@@ -1,16 +1,60 @@
+-commit 9df2137b42572c3624362d9752a457d71942ab6e
+-Author: NewK <>
+-Date:   Tue Jun 1 02:19:12 2021 +0100
++commit 2c79c1144b7c328c8d231e66c4a249863f49b83f
++Author: AroliSG <58828449+AroliSG@users.noreply.github.com>
++Date:   Mon Oct 14 22:54:51 2024 -0400
+ 
+-    Implemented player update events, fixed race condition causing
+-    server thread deadlock, forced GC when calling high frequency events
++    lot of changes
++    
++    more changes in transition to x4
+ 
+- pom.xml                                            |  13 ++-
+- .../github/newk5/vcmp/nodejs/plugin/Context.java   |   6 +-
+- .../vcmp/nodejs/plugin/PlayerUpdateEvents.java     |   4 +-
+- .../vcmp/nodejs/plugin/ServerEventHandler.java     | 105 ++++++++++++---------
+- .../vcmp/nodejs/plugin/proxies/PlayerProxy.java    |   2 +-
+- .../vcmp/nodejs/plugin/proxies/ServerProxy.java    |  30 +++---
+- .../vcmp/nodejs/plugin/proxies/VehicleProxy.java   |   2 +-
+- src/main/resources/Server.js                       |   3 +-
+- 8 files changed, 91 insertions(+), 74 deletions(-)
++ .vscode/settings.json                              |   7 +
++ commit_changes.txt                                 |  16 +
++ dependency-reduced-pom.xml                         |  35 ++
++ pom.xml                                            |  19 +-
++ .../github/newk5/vcmp/nodejs/plugin/Context.java   |   7 +-
++ .../vcmp/nodejs/plugin/ServerEventHandler.java     | 147 ++++----
++ .../nodejs/plugin/proxies/CheckpointProxy.java     |  32 +-
++ .../nodejs/plugin/proxies/GameObjectProxy.java     |  29 +-
++ .../vcmp/nodejs/plugin/proxies/PickupProxy.java    |  28 +-
++ .../vcmp/nodejs/plugin/proxies/PlayerProxy.java    |  77 +++--
++ .../vcmp/nodejs/plugin/proxies/ServerProxy.java    | 113 +++---
++ .../vcmp/nodejs/plugin/proxies/VehicleProxy.java   |  29 +-
++ .../vcmp/nodejs/plugin/util/EntityConverter.java   |  36 +-
++ .../vcmp/nodejs/plugin/util/FileResourceUtils.java |  21 +-
++ .../vcmp/nodejs/plugin/util/PojoConverter.java     |  32 --
++ src/main/resources/EventHandler.js                 | 167 +++++++++
++ src/main/resources/Pickup.js                       |   2 +-
++ src/main/resources/Player.js                       | 194 ++++++-----
++ src/main/resources/Server.js                       | 232 +++++++------
++ src/main/resources/VCMPGlobals.js                  |  27 +-
++ target/classes/Checkpoint.js                       |  48 +++
++ target/classes/CoordBlipInfo.js                    |  20 ++
++ target/classes/EventHandler.js                     | 167 +++++++++
++ target/classes/Object.js                           |  40 +++
++ target/classes/Pickup.js                           |  35 ++
++ target/classes/Player.js                           | 126 +++++++
++ target/classes/Server.js                           | 145 ++++++++
++ target/classes/VCMPGlobals.js                      | 379 +++++++++++++++++++++
++ target/classes/VCMPStream.js                       |  85 +++++
++ target/classes/Vehicle.js                          |  87 +++++
++ target/classes/byte-buffer.min.js                  |  10 +
++ .../github/newk5/vcmp/nodejs/plugin/Context.class  | Bin 0 -> 1997 bytes
++ .../vcmp/nodejs/plugin/PlayerUpdateEvents.class    | Bin 0 -> 2842 bytes
++ .../newk5/vcmp/nodejs/plugin/SavedPlayerData.class | Bin 0 -> 1819 bytes
++ .../vcmp/nodejs/plugin/ServerEventHandler.class    | Bin 0 -> 35757 bytes
++ .../nodejs/plugin/proxies/CheckpointProxy.class    | Bin 0 -> 7631 bytes
++ .../nodejs/plugin/proxies/GameObjectProxy.class    | Bin 0 -> 7199 bytes
++ .../vcmp/nodejs/plugin/proxies/PickupProxy.class   | Bin 0 -> 6719 bytes
++ .../vcmp/nodejs/plugin/proxies/PlayerProxy.class   | Bin 0 -> 12235 bytes
++ .../vcmp/nodejs/plugin/proxies/ServerProxy.class   | Bin 0 -> 20692 bytes
++ .../vcmp/nodejs/plugin/proxies/VehicleProxy.class  | Bin 0 -> 11482 bytes
++ .../vcmp/nodejs/plugin/util/EntityConverter.class  | Bin 0 -> 3072 bytes
++ .../nodejs/plugin/util/FileResourceUtils.class     | Bin 0 -> 2461 bytes
++ .../vcmp/nodejs/plugin/util/PojoConverter.class    | Bin 0 -> 1327 bytes
++ target/classes/tinylog.properties                  |   5 +
++ target/maven-archiver/pom.properties               |   3 +
++ .../compile/default-compile/createdFiles.lst       |  13 +
++ .../compile/default-compile/inputFiles.lst         |  12 +
++ target/nodejs-vcmp-plugin.jar                      | Bin 0 -> 53378752 bytes
++ target/original-nodejs-vcmp-plugin.jar             | Bin 0 -> 69651 bytes
++ update.bat                                         |   1 +
++ 51 files changed, 1974 insertions(+), 452 deletions(-)

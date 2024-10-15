@@ -3,19 +3,19 @@ package com.github.newk5.vcmp.nodejs.plugin;
 import com.github.newk5.vcmp.nodejs.plugin.util.FileResourceUtils;
 import com.github.newk5.vcmp.nodejs.plugin.util.EntityConverter;
 import com.github.newk5.vcmp.nodejs.plugin.proxies.PlayerProxy;
-import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.enums.JSRuntimeType;
 import com.caoccao.javet.exceptions.JavetExecutionException;
 import com.caoccao.javet.interop.V8Host;
+import com.caoccao.javet.interop.engine.JavetEngineConfig;
 import com.caoccao.javet.interop.executors.IV8Executor;
+import com.caoccao.javet.interop.options.NodeRuntimeOptions;
 import com.caoccao.javet.node.modules.NodeModuleModule;
-import com.caoccao.javet.node.modules.NodeModuleProcess;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.primitive.V8ValueBoolean;
 import com.caoccao.javet.values.primitive.V8ValueString;
 import com.caoccao.javet.values.reference.V8ValueObject;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
-import com.eclipsesource.json.JsonValue;
 import static com.github.newk5.vcmp.nodejs.plugin.Context.v8;
 import com.github.newk5.vcmp.nodejs.plugin.proxies.CheckpointProxy;
 import com.github.newk5.vcmp.nodejs.plugin.proxies.GameObjectProxy;
@@ -23,8 +23,8 @@ import com.github.newk5.vcmp.nodejs.plugin.proxies.PickupProxy;
 import com.github.newk5.vcmp.nodejs.plugin.proxies.ServerProxy;
 import com.github.newk5.vcmp.nodejs.plugin.proxies.VehicleProxy;
 
+
 import com.maxorator.vcmp.java.plugin.integration.RootEventHandler;
-import com.maxorator.vcmp.java.plugin.integration.generic.Colour;
 import com.maxorator.vcmp.java.plugin.integration.placeable.CheckPoint;
 import com.maxorator.vcmp.java.plugin.integration.placeable.GameObject;
 import com.maxorator.vcmp.java.plugin.integration.placeable.Pickup;
@@ -51,7 +51,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class ServerEventHandler extends RootEventHandler {
-
     public static EntityConverter entityConverter;
     public static Server server;
     public static String playerJs = "";
@@ -71,7 +70,7 @@ public class ServerEventHandler extends RootEventHandler {
     private boolean isWin = System.getProperty("os.name").toLowerCase().indexOf("win") >= 0;
     private FileResourceUtils resources = new FileResourceUtils();
 
-    public ServerEventHandler(Server server) throws IOException, InterruptedException, JavetException {
+    public ServerEventHandler(Server server) throws IOException, InterruptedException {
         super(server);
         this.server = server;
         entityConverter = new EntityConverter();
@@ -116,35 +115,52 @@ public class ServerEventHandler extends RootEventHandler {
         updateChecker.start();
 
         V8Host host = V8Host.getNodeInstance();
+     //   NodeRuntimeOptions runtimeOptions = new NodeRuntimeOptions();
+        
+     /*    JavetEngineConfig config = new JavetEngineConfig();
+        config.setAllowEval(true); // Enables eval and dynamic code execution
+        config.setJSRuntimeType(JSRuntimeType.Node); // If using Node.js
+*/
 
-        v8 = host.createV8Runtime();
-        Thread eventLoop = new Thread(() -> {
-            try {
+      //  runtimeOptions.V8_FLAGS.setCustomFlags("--experimental-modules --no-restrict-code-generation-from-strings --es-module-specifier-resolution=nod");
 
-                eventLoopStarted.set(true);
-                while (true) {
-                    v8.await();
-                    Thread.sleep(1);
+        try {
+            v8 = host.createV8Runtime();
+            v8.allowEval(true);
+            Thread eventLoop = new Thread(() -> {
+                try {
 
+                    eventLoopStarted.set(true);
+                    while (true) {
+                        v8.await();
+                        Thread.sleep(1);
+
+                    }
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ServerEventHandler.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } catch (Exception ex) {
-                Logger.getLogger(ServerEventHandler.class.getName()).log(Level.SEVERE, null, ex);
-            }
 
-        });
-        eventLoop.setName("eventLoopThread");
-        eventLoop.start();
+            });
 
-        Context.load(server);
+            eventLoop.setName("eventLoopThread");
+            eventLoop.start();
+
+            Context.load(server);
+
+        }catch(Exception ex) {
+            Logger.getLogger(ServerEventHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
 
         try {
 
-            this.playerJs = resources.readResource("Player.js");
-            this.checkpointJs = resources.readResource("Checkpoint.js");
-            this.objectJs = resources.readResource("Object.js");
-            this.pickupJs = resources.readResource("Pickup.js");
-            this.vehicleJs = resources.readResource("Vehicle.js");
+            this.playerJs       = resources.readResource("Player.js");
+            this.checkpointJs   = resources.readResource("Checkpoint.js");
+            this.objectJs       = resources.readResource("Object.js");
+            this.pickupJs       = resources.readResource("Pickup.js");
+            this.vehicleJs      = resources.readResource("Vehicle.js");
             v8.getExecutor(resources.readResource("VCMPGlobals.js")).executeVoid();
+            v8.getExecutor(resources.readResource("EventHandler.js")).executeVoid();
             v8.getExecutor(resources.readResource("Server.js")).executeVoid();
             init();
 
@@ -152,12 +168,10 @@ public class ServerEventHandler extends RootEventHandler {
                 playerUpdateEvents = new PlayerUpdateEvents(this);
             }
 
+            System.out.println("Loaded plugin: libnodejsrel64");
             System.out.println("");
-            v8.getExecutor(" console.log('\\x1b[32m', 'Loaded plugin: Node.js " + version + " by NewK ');").executeVoid();
-            v8.getExecutor(" console.log('\\x1b[32m','Node.js '+process.version);").executeVoid();
-            v8.getExecutor(" console.log('\\x1b[0m', '');").executeVoid();
-            System.out.println("");
-            org.pmw.tinylog.Logger.info("Node.js context initilized");
+
+            org.pmw.tinylog.Logger.info("Node.js context initialized");
 
         } catch (Exception e) {
             exception(e);
@@ -186,6 +200,12 @@ public class ServerEventHandler extends RootEventHandler {
 
                 v8.getGlobalObject().invokeVoid("onServerInitialise");
 
+                System.out.println("");
+                v8.getExecutor(" console.log('\\x1b[32m lib version " + version + " updated by AroliSG');").executeVoid();
+                v8.getExecutor(" console.log('\\x1b[32m by NewK and AroliSG');").executeVoid();
+                v8.getExecutor(" console.log('\\x1b[32m Node.js version: ' + process.version);").executeVoid();
+                System.out.println("");
+
             }
         } catch (Exception e) {
             exception(e);
@@ -196,9 +216,11 @@ public class ServerEventHandler extends RootEventHandler {
 
     public void init() {
         try {
+            v8.getExecutor(resources.readResource("byte-buffer.min.js")).executeVoid();
+            v8.getExecutor(resources.readResource("VCMPStream.js")).executeVoid();
 
-            V8ValueString dirname = new V8ValueString(new File("").getAbsolutePath() + File.separator + "src");
-            V8ValueString filename = new V8ValueString(new File("").getAbsolutePath() + File.separator + "src" + File.separator + "main.js");
+            V8ValueString dirname   = v8.createV8ValueString(new File("").getAbsolutePath() + File.separator + "src");
+            V8ValueString filename  = v8.createV8ValueString(new File("").getAbsolutePath() + File.separator + "src" + File.separator + "main.js");
 
             v8.getGlobalObject().setProperty("__dirname", dirname);
             v8.getGlobalObject().setProperty("__filename", filename);
@@ -211,16 +233,19 @@ public class ServerEventHandler extends RootEventHandler {
             // e.setResourceName(new File("." + File.separator + "src" + File.separator + "main.js").getAbsolutePath()); //avoid, causes weird issue with players not being able to join
             // v8.getNodeModule(NodeModuleProcess.class).setWorkingDirectory(new File("src").toPath()); //avoid, causes weird issue with players not being able to join
             //point to fake folder to fix relative require() paths to work when pointing to file in the same directory of main.js
-            v8.getNodeModule(NodeModuleModule.class).setRequireRootDirectory(new File("src" + File.separator + "script" + System.currentTimeMillis()).toPath());
-            V8Value playerProxy = entityConverter.toV8Value(v8, new PlayerProxy());
-            V8Value vehicleProxy = entityConverter.toV8Value(v8, new VehicleProxy());
-            V8Value pickupProxy = entityConverter.toV8Value(v8, new PickupProxy());
-            V8Value objectProxy = entityConverter.toV8Value(v8, new GameObjectProxy());
-            V8Value checkpointProxy = entityConverter.toV8Value(v8, new CheckpointProxy());
+            v8.getNodeModule(NodeModuleModule.class)
+                .setRequireRootDirectory(new File("src" + File.separator + "script" + System.currentTimeMillis()).getAbsolutePath());
 
-            ServerProxy sp = new ServerProxy();
-            V8Value serverProxy = entityConverter.toV8Value(v8, sp);
-            V8Value serverJs = entityConverter.toV8Value(v8, server);
+            V8Value playerProxy     = entityConverter.convertToV8Value(v8, new PlayerProxy());
+            V8Value vehicleProxy    = entityConverter.convertToV8Value(v8, new VehicleProxy());
+            V8Value pickupProxy     = entityConverter.convertToV8Value(v8, new PickupProxy());
+            V8Value objectProxy     = entityConverter.convertToV8Value(v8, new GameObjectProxy());
+            V8Value checkpointProxy = entityConverter.convertToV8Value(v8, new CheckpointProxy());
+
+
+            ServerProxy sp      = new ServerProxy();
+            V8Value serverProxy = entityConverter.convertToV8Value(v8, sp);
+            V8Value serverJs    = entityConverter.convertToV8Value(v8, server);
 
             v8.getGlobalObject().set("__PlayerProxy", playerProxy);
             v8.getGlobalObject().set("__VehicleProxy", vehicleProxy);
@@ -230,7 +255,7 @@ public class ServerEventHandler extends RootEventHandler {
             v8.getGlobalObject().set("__ServerProxy", serverProxy);
 
             sp.overrideObjectGetters();
-            e.executeVoid();
+            e.executeBoolean();
 
             playerProxy.close();
             vehicleProxy.close();
@@ -241,8 +266,7 @@ public class ServerEventHandler extends RootEventHandler {
             dirname.close();
             filename.close();
 
-            v8.getExecutor(resources.readResource("byte-buffer.min.js")).executeVoid();
-            v8.getExecutor(resources.readResource("VCMPStream.js")).executeVoid();
+
 
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -275,7 +299,7 @@ public class ServerEventHandler extends RootEventHandler {
                 System.out.println(msg);
                 org.pmw.tinylog.Logger.error(msg);
             }
-        } catch (Exception javetException) {
+        } catch (Exception ex) {
         }
 
     }
@@ -291,7 +315,7 @@ public class ServerEventHandler extends RootEventHandler {
 
                 v8.getExecutor("onPlayerConnect(" + playerObj + "); ").executeVoid();
 
-            } catch (JavetException ex) {
+            } catch (Exception ex) {
                 ex.printStackTrace();
                 exception(ex);
             }
@@ -306,16 +330,11 @@ public class ServerEventHandler extends RootEventHandler {
 
                 try {
                     v8.getGlobalObject().invokeVoid("onServerLoadScripts");
-
-                } catch (JavetException ex) {
+                } catch (Exception ex) {
                     Logger.getLogger(ServerEventHandler.class.getName()).log(Level.SEVERE, null, ex);
                 }
-
-               
             }
-
         } catch (Exception ex) {
-
             exception(ex);
         }
 
@@ -409,7 +428,7 @@ public class ServerEventHandler extends RootEventHandler {
 
             try {
                 try (V8ValueObject p = playerToV8Object(player);
-                        V8ValueString o2 = new V8ValueString(list);) {
+                        V8ValueString o2 = v8.createV8ValueString(list);) {
 
                     v8.getGlobalObject().invokeVoid("onPlayerModuleList", p, o2);
 
@@ -442,9 +461,9 @@ public class ServerEventHandler extends RootEventHandler {
 
             try {
 
-                try (V8ValueString o1 = new V8ValueString(name);
-                        V8ValueString o2 = new V8ValueString(password);
-                        V8ValueString o3 = new V8ValueString(ip);) {
+                try (V8ValueString o1 = v8.createV8ValueString(name);
+                        V8ValueString o2 = v8.createV8ValueString(password);
+                        V8ValueString o3 = v8.createV8ValueString(ip);) {
                     Object o = v8.getGlobalObject().invoke("onIncomingConnection", o1, o2, o3);
 
                     if (o != null) {
@@ -545,7 +564,7 @@ public class ServerEventHandler extends RootEventHandler {
         if (Context.functionExists("onPlayerCommand")) {
 
             try (V8ValueObject p = playerToV8Object(player);
-                    V8ValueString o2 = new V8ValueString(message);) {
+                    V8ValueString o2 = v8.createV8ValueString(message);) {
 
                 Object o = v8.getGlobalObject().invoke("onPlayerCommand", p, o2);
 
@@ -570,7 +589,7 @@ public class ServerEventHandler extends RootEventHandler {
             try {
                 try (
                         V8ValueObject p = playerToV8Object(player);
-                        V8ValueString o2 = new V8ValueString(crashLog);) {
+                        V8ValueString o2 = v8.createV8ValueString(crashLog);) {
 
                     v8.getGlobalObject().invokeVoid("onPlayerCrashReport", p, o2);
                     v8.getExecutor("VCMP.PlayerData[" + player.getId() + "]= {};").executeVoid();
@@ -783,7 +802,7 @@ public class ServerEventHandler extends RootEventHandler {
             try {
                 try (V8ValueObject p = playerToV8Object(player);
                         V8ValueObject p2 = playerToV8Object(recipient);
-                        V8ValueString s = new V8ValueString(message);) {
+                        V8ValueString s = v8.createV8ValueString(message);) {
                     Object o = v8.getGlobalObject().invoke("onPlayerPrivateMessage", p, p2, s);
 
                     v8.getExecutor("delete global." + tempPlayerVar).executeVoid();
@@ -808,7 +827,7 @@ public class ServerEventHandler extends RootEventHandler {
 
             try {
                 try (V8ValueObject p = playerToV8Object(player);
-                        V8ValueString s = new V8ValueString(message);) {
+                        V8ValueString s = v8.createV8ValueString(message);) {
 
                     Object o = v8.getGlobalObject().invoke("onPlayerMessage", p, s);
 
@@ -954,8 +973,8 @@ public class ServerEventHandler extends RootEventHandler {
 
             try {
                 try (V8ValueObject p = playerToV8Object(player);
-                        V8ValueString o2 = new V8ValueString(oldName);
-                        V8ValueString o3 = new V8ValueString(newName);) {
+                        V8ValueString o2 = v8.createV8ValueString(oldName);
+                        V8ValueString o3 = v8.createV8ValueString(newName);) {
 
                     v8.getGlobalObject().invoke("onPlayerNameChange", p, o2, o3);
 
@@ -974,7 +993,7 @@ public class ServerEventHandler extends RootEventHandler {
             String playerObj = "(" + playerJs.replaceFirst("'#id'", player.getId() + "") + ").attachData()";
             V8ValueObject p = v8.getExecutor("global." + this.tempPlayerVar + "=" + playerObj + "; global." + this.tempPlayerVar + ";").execute();
             return p;
-        } catch (JavetException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(ServerEventHandler.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;

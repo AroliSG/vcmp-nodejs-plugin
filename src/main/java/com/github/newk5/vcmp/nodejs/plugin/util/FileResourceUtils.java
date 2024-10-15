@@ -16,19 +16,26 @@ public class FileResourceUtils {
         InputStream inputStream = classLoader.getResourceAsStream(fileName);
 
         if (inputStream == null) {
-            throw new IllegalArgumentException("file not found! " + fileName);
+            throw new IllegalArgumentException("File not found: " + fileName);
         } else {
             return inputStream;
         }
-
     }
 
     public String readResource(String file) {
 
-        InputStream in = getFileFromResourceAsStream(file);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-        String code = reader.lines().collect(Collectors.joining("\n")).replaceFirst("var a =", "");
-        return code.replaceFirst("var a =", "");
-    }
+        try (InputStream in = getFileFromResourceAsStream(file);
+             BufferedReader reader = new BufferedReader(new InputStreamReader(in))) {
 
+            // Read the resource and remove specific text
+            String code = reader.lines()
+                    .collect(Collectors.joining("\n"))
+                    .replaceFirst("var a =", "");
+            return code.replaceFirst("var a =", "");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null; // or handle error appropriately
+        }
+    }
 }

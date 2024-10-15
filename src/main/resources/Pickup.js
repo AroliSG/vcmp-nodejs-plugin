@@ -11,7 +11,7 @@ var a = {
     getQuantity : function ( ){ return  __PickupProxy.run(this.id, 'getQuantity', arguments); },
     setOption : function ( arg0, arg1 ){  __PickupProxy.run(this.id, 'setOption', arguments); },
     setWorld : function ( arg0 ){  __PickupProxy.run(this.id, 'setWorld', arguments); },
-    refresh : function ( ){  __PickupProxy.run(this.id, 'refresh', arguments); },
+    refresh : function ( ){  return __PickupProxy.run(this.id, 'refresh', arguments); },
     isAutomatic : function ( ){ return  __PickupProxy.run(this.id, 'isAutomatic', arguments); },
     setPosition : function ( arg0, arg1, arg2 ){  __PickupProxy.run(this.id, 'setPosition', arguments); },
     getModel : function ( ){ return  __PickupProxy.run(this.id, 'getModel', arguments); },

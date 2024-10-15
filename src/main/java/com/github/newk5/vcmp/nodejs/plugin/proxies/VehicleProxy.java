@@ -1,5 +1,6 @@
 package com.github.newk5.vcmp.nodejs.plugin.proxies;
 
+import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.primitive.V8ValueBoolean;
 import com.caoccao.javet.values.primitive.V8ValueDouble;
 import com.caoccao.javet.values.primitive.V8ValueInteger;
@@ -38,27 +39,29 @@ public class VehicleProxy {
             V8ValueArray arr = (V8ValueArray) args[0];
             List<Object> lst = new ArrayList<>();
             List<Class> paramTypes = new ArrayList<>();
-            arr.forEach((k, v) -> {
-                if (v instanceof V8ValueNull) {
+
+            for (int i = 0; i < arr.getLength(); i++) {
+                V8Value value = arr.get(i);
+                if (value instanceof V8ValueNull) {
                     lst.add(null);
 
-                } else if (v instanceof V8ValueString) {
-                    lst.add(((V8ValueString) v).toPrimitive());
+                } else if (value instanceof V8ValueString) {
+                    lst.add(((V8ValueString) value).toPrimitive());
                     paramTypes.add(String.class);
-                } else if (v instanceof V8ValueBoolean) {
-                    lst.add(((V8ValueBoolean) v).toPrimitive());
+                } else if (value instanceof V8ValueBoolean) {
+                    lst.add(((V8ValueBoolean) value).toPrimitive());
                     paramTypes.add(boolean.class);
-                } else if (v instanceof V8ValueInteger) {
-                    lst.add(((V8ValueInteger) v).toPrimitive());
+                } else if (value instanceof V8ValueInteger) {
+                    lst.add(((V8ValueInteger) value).toPrimitive());
                     paramTypes.add(int.class);
-                } else if (v instanceof V8ValueDouble) {
-                    lst.add(Float.valueOf(((V8ValueDouble) v).toPrimitive() + ""));
+                } else if (value instanceof V8ValueDouble) {
+                    lst.add(Float.valueOf(((V8ValueDouble) value).toPrimitive() + ""));
                     paramTypes.add(double.class);
-                } else if (v instanceof V8ValueLong) {
-                    lst.add(((V8ValueLong) v).toPrimitive());
+                } else if (value instanceof V8ValueLong) {
+                    lst.add(((V8ValueLong) value).toPrimitive());
                     paramTypes.add(long.class);
                 }
-            });
+            }
 
             Method m = cachedMethods.get(method);
             if (m == null) {

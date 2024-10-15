@@ -1,0 +1,16 @@
+commit 9df2137b42572c3624362d9752a457d71942ab6e
+Author: NewK <>
+Date:   Tue Jun 1 02:19:12 2021 +0100
+
+    Implemented player update events, fixed race condition causing
+    server thread deadlock, forced GC when calling high frequency events
+
+ pom.xml                                            |  13 ++-
+ .../github/newk5/vcmp/nodejs/plugin/Context.java   |   6 +-
+ .../vcmp/nodejs/plugin/PlayerUpdateEvents.java     |   4 +-
+ .../vcmp/nodejs/plugin/ServerEventHandler.java     | 105 ++++++++++++---------
+ .../vcmp/nodejs/plugin/proxies/PlayerProxy.java    |   2 +-
+ .../vcmp/nodejs/plugin/proxies/ServerProxy.java    |  30 +++---
+ .../vcmp/nodejs/plugin/proxies/VehicleProxy.java   |   2 +-
+ src/main/resources/Server.js                       |   3 +-
+ 8 files changed, 91 insertions(+), 74 deletions(-)

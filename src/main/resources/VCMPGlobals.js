@@ -88,6 +88,21 @@ const VCMP = {
             NoCriticals: 6
         }
     },
+    Explosion: {
+        Option: {
+            CameraShakeOnly: 0,
+            MolotovLike: 1,
+            SmallExplosion: 2,
+            VehicleExplosion: 3,
+            LargerExplosion: 6,
+            MassiveExplosion: 7,
+            TinyExplosion: 8,
+            DimExplosion: 9,
+            BrightExplosion: 10,
+            GasPumpExplosion: 11,
+            BeyondEleven: 12
+        }
+    },
     Server: {
         Option: {
             SyncFrameLimiter: 0,
@@ -111,8 +126,16 @@ const VCMP = {
             UseClasses: 18,
             Wallglitch: 19,
             DisableBackfaceCulling: 20,
-            DisableHeliBladeDamage: 21
-        }
+            DisableHeliBladeDamage: 21,
+            DisableCrouch: 22
+        },
+        Prefixes: [],
+        commandOptions: {
+            disableCmdTextOutput: false,
+            commandDelayInSecs: 0,
+            commandNotFoundCallback: null,
+            commandDelayCallback: null
+        },
     },
     Vehicle: {
         HandlingRule: {

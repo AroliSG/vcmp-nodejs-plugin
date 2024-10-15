@@ -1,8 +1,6 @@
 package com.github.newk5.vcmp.nodejs.plugin;
 
-import com.caoccao.javet.exceptions.JavetException;
 import com.caoccao.javet.interop.NodeRuntime;
-
 import com.maxorator.vcmp.java.plugin.integration.server.Server;
 import vlsi.utils.CompactHashMap;
 
@@ -21,15 +19,16 @@ public class Context {
         try {
             Boolean val = functionMap.get(name);
             if (val == null) {
+                // Check if the function exists in the global object
                 val = v8.getGlobalObject().has(name);
-
                 functionMap.put(name, val);
                 return val;
             } else {
                 return val;
             }
 
-        } catch (JavetException e) {
+        } catch (Exception e) {
+            // Handle the generic exception
             e.printStackTrace();
         }
         return false;

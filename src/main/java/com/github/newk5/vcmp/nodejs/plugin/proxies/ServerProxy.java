@@ -1,6 +1,6 @@
 package com.github.newk5.vcmp.nodejs.plugin.proxies;
 
-import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.primitive.V8ValueBoolean;
 import com.caoccao.javet.values.primitive.V8ValueDouble;
 import com.caoccao.javet.values.primitive.V8ValueInteger;
@@ -39,7 +39,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import vlsi.utils.CompactHashMap;
-
+import com.caoccao.javet.interop.V8Host;
 public class ServerProxy {
 
     private static CompactHashMap<String, Method> cachedMethods = new CompactHashMap<>();
@@ -49,7 +49,7 @@ public class ServerProxy {
 
     private V8ValueObject tempObj;
 
-    public void overrideObjectGetters() throws JavetException {
+    public void overrideObjectGetters() {
         String playerObj = "(" + playerJs.replaceFirst("'#id'", "arg0") + ").attachData()";
         String playerObjId = "(" + playerJs.replaceFirst("'#id'", "id") + ").attachData()";
         String playerObjGetAll = "(" + playerJs.replaceFirst("'#id'", "ids[i]") + ").attachData()";
@@ -65,27 +65,39 @@ public class ServerProxy {
         String pobjId = "(" + pickupJs.replaceFirst("'#id'", "id") + ").attachData()";
         String vehicleObjId = "(" + vehicleJs.replaceFirst("'#id'", "id") + ").attachData()";
 
-        Context.v8.getExecutor(""
-                + "server.sendClientMessageToAll = function( msg ) { __ServerProxy.sendClientMessageToAll(msg); };  "
+        try {
+            Context.v8.getExecutor(""
+               // + "server.sendClientMessageToAll = function( msg ) { __ServerProxy.sendClientMessageToAll(msg); };  "
                 + "server.print = function() {    var result = [];     for (var id in this) {   try {  if (typeof(this[id]) == \"function\") {  result.push(id + \": \" + this[id].toString().split(\")\")[0]+\")\" );  }  } catch (err) { result.push(id + \": inaccessible\");   }    }  console.log(result);  }\n"
-                + "server.sendClientMessage = function (  recipient,  colourHex,  message ){  __ServerProxy.run('sendClientMessage', [recipient.id, colourHex, message]);  };\n"
+            // + "server.sendClientMessage = function (  recipient,  message ){  __ServerProxy.run('sendClientMessage', [recipient.id, 16777215, message]);  };\n"
                 + "server.getObject = function ( arg0 ){ if (__ServerProxy.objectExists(arg0)) { return  " + gameObj + ";  } return null;   };\n"
                 + "server.sendGameMessage = function ( arg0, arg1, arg2 ){ __ServerProxy.run('sendGameMessage', [arg0.id, arg1, arg2]); };\n"
-                + "server.addPlayerClass = function ( arg0, arg1, arg2 ){ __ServerProxy.run('addPlayerClass', arguments); };\n"
-                + "server.createExplosion = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6 ){  __ServerProxy.createExplosion( arg0, arg1, arg2, arg3, arg4, arg5==null ? null : arg5.id, arg6  ); };"
-                + "server.createObject = function ( arg0, arg1, arg2, arg3, arg4, arg5 ){ const id =  __ServerProxy.run('createObject', arguments);  return  " + gameObjId + "; };\n"
-                + "server.getCoordBlipInfo = function ( arg0 ){ return  __ServerProxy.run('getCoordBlipInfo', arguments); };\n"
+                + "server.addPlayerClass = function ( arg0, arg1, arg2 ){ __ServerProxy.run('addPlayerClass', Array.from(arguments)); };\n"
+               // + "server.createExplosion = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6 ){  __ServerProxy.createExplosion( arg0, arg1, arg2, arg3, arg4, arg5==null ? null : arg5.id, arg6  ); };"
+                + "server.createObject = function ( arg0, arg1, arg2, arg3, arg4, arg5 ){ const id =  __ServerProxy.run('createObject', Array.from(arguments));  return  " + gameObjId + "; };\n"
+                + "server.getCoordBlipInfo = function ( arg0 ){ return  __ServerProxy.run('getCoordBlipInfo', Array.from(arguments)); };\n"
                 + "server.getPlayer = function ( arg0 ){ if (__ServerProxy.playerExists(arg0)) { return  " + playerObj + ";  } return null;   };\n"
                 + "server.getAllPlayers = function ( ){ let players = []; const ids =  __ServerProxy.getJSPlayerIdsArray(); for (let i = 0; i < ids.length; i++){ players.push(" + playerObjGetAll + "); } return players; };\n"
                 + "server.findPlayer = function ( arg0 ){ const id =  __ServerProxy.getPlayerIdByName(arg0); if (id != null) {  return  " + playerObjId + "; } return null; };\n"
-                + "server.createVehicle = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ){ const id =  __ServerProxy.run('createVehicle', arguments); return  " + vehicleObjId + ";  };\n"
+                + "server.createVehicle = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ){ const id =  __ServerProxy.run('createVehicle', Array.from(arguments)); return  " + vehicleObjId + ";  };\n"
                 + "server.getVehicle = function ( arg0 ){ if (__ServerProxy.vehicleExists(arg0)) { return  " + vehicleObj + ";  } return null;   };\n"
                 + "server.getAllVehicles = function ( ){ let vehs = []; const ids = __ServerProxy.getJSVehIdsArray(); for (let i = 0; i < ids.length; i++){ vehs.push(" + vehicleObjGetAll + "); } return vehs; };\n"
                 + "server.getPickup = function ( arg0 ){ if (__ServerProxy.pickupExists(arg0)) { return  " + pobj + ";  } return null;   };\n"
-                + "server.createPickup = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ){ const id = __ServerProxy.run('createPickup', arguments); return  " + pobjId + ";   };\n"
+                + "server.createPickup = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ){ const id = __ServerProxy.run('createPickup', Array.from(arguments)); return  " + pobjId + ";   };\n"
                 + "server.getCheckPoint = function ( arg0 ){ if (__ServerProxy.checkPointExists(arg0)) { return  " + chObj + ";  } return null;   };\n"
-                + "server.createCheckPoint = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 ){  const id =  __ServerProxy.run('createCheckPoint', [arg0== null ? null: arg0.id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10] );  return  " + chObjId + ";  };")
-                .executeVoid();
+                + "server.createCheckPoint = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 ){  const id =  __ServerProxy.run('createCheckPoint', [arg0== null ? null: arg0.id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10] );  return  " + chObjId + ";  };"
+            ).executeVoid();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void sendClientMessage(Integer player, String msg) {
+        syncThread();
+        Player target = ServerEventHandler.server.getPlayer(player);
+        ServerEventHandler.server.sendClientMessage(target, 16777215, msg);
+        closeSyncBlock();
     }
 
     public void sendClientMessageToAll(String msg) {
@@ -96,6 +108,7 @@ public class ServerProxy {
 
     public void createExplosion(int worldId, int type, float x, float y, float z, Integer responsiblePlayer, boolean atGroundLevel) {
         syncThread();
+        System.out.println("createExplosion" + worldId +","+ type +","+ x +","+ y +","+ z +","+ responsiblePlayer+","+ atGroundLevel);
         ServerEventHandler.server.createExplosion(worldId, type, x, y, z, responsiblePlayer == null ? null : ServerEventHandler.server.getPlayer(responsiblePlayer), atGroundLevel);
         closeSyncBlock();
     }
@@ -110,7 +123,7 @@ public class ServerProxy {
                     forEach(i -> {
                         try {
                             arr.push(i);
-                        } catch (JavetException ex) {
+                        } catch (Exception ex) {
                             ex.printStackTrace();
                         }
                     });
@@ -135,7 +148,7 @@ public class ServerProxy {
                     forEach(i -> {
                         try {
                             arr.push(i);
-                        } catch (JavetException ex) {
+                        } catch (Exception ex) {
                             ex.printStackTrace();
                         }
                     });
@@ -202,9 +215,7 @@ public class ServerProxy {
     public  static void syncThread() {
         boolean workerThread = Thread.currentThread().getName().equals("eventLoopThread");
         if (workerThread && synced == null) { //dont start another sync block if there is already an active one
-
             try {
-              
                 synced = server.sync();
                 synced.start();
             } catch (IOException ex) {
@@ -228,49 +239,51 @@ public class ServerProxy {
 
     public Object run(String methodName, Object... args) {
         try {
-
             V8ValueArray arr = (V8ValueArray) args[0];
             List<Object> lst = new ArrayList<>();
             List<Class> paramTypes = new ArrayList<>();
-            arr.forEach((k, v) -> {
-                if (v instanceof V8ValueNull) {
+
+             for (int i = 0; i < arr.getLength(); i++) {
+                V8Value value = arr.get(i);
+
+                if (value instanceof V8ValueNull) {
                     lst.add(null);
 
-                } else if (v instanceof V8ValueString) {
-                    lst.add(((V8ValueString) v).toPrimitive());
+                } else if (value instanceof V8ValueString) {
+                    lst.add(((V8ValueString) value).toPrimitive());
                     paramTypes.add(String.class);
-                } else if (v instanceof V8ValueBoolean) {
-                    lst.add(((V8ValueBoolean) v).toPrimitive());
+                } else if (value instanceof V8ValueBoolean) {
+                    lst.add(((V8ValueBoolean) value).toPrimitive());
                     paramTypes.add(boolean.class);
-                } else if (v instanceof V8ValueInteger) {
-                    lst.add(((V8ValueInteger) v).toPrimitive());
+                } else if (value instanceof V8ValueInteger) {
+                    lst.add(((V8ValueInteger) value).toPrimitive());
                     paramTypes.add(int.class);
-                } else if (v instanceof V8ValueDouble) {
-                    lst.add(Float.valueOf(((V8ValueDouble) v).toPrimitive() + ""));
+                } else if (value instanceof V8ValueDouble) {
+                    lst.add(Float.valueOf(((V8ValueDouble) value).toPrimitive() + ""));
                     paramTypes.add(double.class);
-                } else if (v instanceof V8ValueLong) {
-                    lst.add(((V8ValueLong) v).toPrimitive());
+                } else if (value instanceof V8ValueLong) {
+                    lst.add(((V8ValueLong) value).toPrimitive());
                     paramTypes.add(long.class);
                 }
-            });
+            }
 
             Method m = cachedMethods.get(methodName);
             if (m == null) {
                 m = Arrays
-                        .stream(methods)
-                        .filter(me -> me.getName().equals(methodName))
-                        .filter(me -> me.getParameterCount() == lst.size()) //make sure method signature matches
-                        .filter(me -> {
-                            boolean b = Arrays.equals(me.getParameterTypes(), paramTypes.toArray());
-                            if (methodName.equals("getOption") || methodName.equals("setOption")) {
-                                return b;
-                            }
-                            return true;
+                    .stream(methods)
+                    .filter(me -> me.getName().equals(methodName))
+                    .filter(me -> me.getParameterCount() == lst.size()) //make sure method signature matches
+                    .filter(me -> {
+                        boolean b = Arrays.equals(me.getParameterTypes(), paramTypes.toArray());
+                        if (methodName.equals("getOption") || methodName.equals("setOption")) {
+                            return b;
+                        }
+                        return true;
 
-                        })
-                        .findAny().get();
+                    })
+                    .findAny().get();
+
                 cachedMethods.put(methodName, m);
-
             }
 
             syncThread();
@@ -288,7 +301,9 @@ public class ServerProxy {
             }
 
             if (methodName.equals("shutdownServer")) {
-                System.exit(0);
+                V8Host.getNodeInstance().closeV8Runtime(v8);
+                Runtime.getRuntime().halt(0);
+
             } else if (methodName.equals("createCheckPoint")) {
                 CheckPoint ch = (CheckPoint) o;
                 int id = ch.getId();
@@ -370,12 +385,6 @@ public class ServerProxy {
 
                 ServerEventHandler.server.sendGameMessage(target, type, message);
 
-            } else if (methodName.equals("sendClientMessage")) {
-                Player target = ServerEventHandler.server.getPlayer((int) lst.get(0));
-                int colour = (int) lst.get(1);
-                String message = (String) lst.get(2);
-
-                ServerEventHandler.server.sendClientMessage(target, colour, message);
             }
             closeSyncBlock();
             return o;

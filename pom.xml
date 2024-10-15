@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.newk5.vcmp</groupId>
     <artifactId>nodejs-vcmp-plugin</artifactId>
-    <version>1.1.0</version>
+    <version>1.1.1</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -14,7 +14,7 @@
         <dependency>
             <groupId>com.caoccao.javet</groupId>
             <artifactId>javet</artifactId>
-            <version>0.8.7</version>
+            <version>3.1.8</version>
         </dependency>
         <dependency>
             <groupId>org.tinylog</groupId>
@@ -32,12 +32,19 @@
             <version>0.9.5</version>
         </dependency>
         <dependency>
-            <groupId>com.maxorator.vcmp.java.plugin</groupId>
-            <artifactId>integration</artifactId>
-            <version>0.1.7</version>
+            <groupId>com.gitlab.newk5</groupId>
+            <artifactId>vcmp-integration</artifactId>
+            <version>1.2</version>
         </dependency>
     </dependencies>
-    
+
+    <repositories>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>https://gitlab.com/api/v4/projects/32257821/packages/maven</url>
+        </repository>
+    </repositories>
+
     <build>
         <finalName>nodejs-vcmp-plugin</finalName>
         <plugins>

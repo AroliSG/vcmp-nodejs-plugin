@@ -1,6 +1,8 @@
 package com.github.newk5.vcmp.nodejs.plugin.proxies;
 
 import com.caoccao.javet.exceptions.JavetException;
+import com.caoccao.javet.values.V8Value;
+import com.caoccao.javet.values.primitive.V8ValueBigInteger;
 import com.caoccao.javet.values.primitive.V8ValueBoolean;
 import com.caoccao.javet.values.primitive.V8ValueDouble;
 import com.caoccao.javet.values.primitive.V8ValueInteger;
@@ -22,6 +24,7 @@ import com.maxorator.vcmp.java.plugin.integration.player.PlayerImmunity;
 import com.maxorator.vcmp.java.plugin.integration.player.PlayerImpl;
 import com.maxorator.vcmp.java.plugin.integration.vehicle.Vehicle;
 import java.lang.reflect.Method;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -88,36 +91,37 @@ public class PlayerProxy {
             V8ValueArray arr = (V8ValueArray) args[0];
             List<Object> lst = new ArrayList<>();
             List<Class> paramTypes = new ArrayList<>();
-            arr.forEach((k, v) -> {
 
-                if (v instanceof V8ValueNull) {
+            for (int i = 0; i < arr.getLength(); i++) {
+                V8Value value = arr.get(i);
+                if (value instanceof V8ValueNull) {
                     lst.add(null);
 
-                } else if (v instanceof V8ValueString) {
-                    lst.add(((V8ValueString) v).toPrimitive());
+                } else if (value instanceof V8ValueString) {
+                    lst.add(((V8ValueString) value).toPrimitive());
                     paramTypes.add(String.class);
-                } else if (v instanceof V8ValueBoolean) {
-                    lst.add(((V8ValueBoolean) v).toPrimitive());
+                } else if (value instanceof V8ValueBoolean) {
+                    lst.add(((V8ValueBoolean) value).toPrimitive());
                     paramTypes.add(boolean.class);
-                } else if (v instanceof V8ValueInteger) {
-                    lst.add(((V8ValueInteger) v).toPrimitive());
+                } else if (value instanceof V8ValueInteger) {
+                    lst.add(((V8ValueInteger) value).toPrimitive());
                     paramTypes.add(int.class);
-                } else if (v instanceof V8ValueDouble) {
+                } else if (value instanceof V8ValueDouble) {
                     if (method.equals("setColour")) {
-                        V8ValueDouble d = (V8ValueDouble) v;
+                        V8ValueDouble d = (V8ValueDouble) value;
                         Double nd = d.toPrimitive();
                         lst.add(nd.intValue());
                         paramTypes.add(int.class);
                     } else {
-                        lst.add(Float.valueOf(((V8ValueDouble) v).toPrimitive() + ""));
+                        lst.add(Float.valueOf(((V8ValueDouble) value).toPrimitive() + ""));
                         paramTypes.add(double.class);
                     }
 
-                } else if (v instanceof V8ValueLong) {
-                    lst.add(((V8ValueLong) v).toPrimitive());
+                } else if (value instanceof V8ValueLong) {
+                    lst.add(((V8ValueLong) value).toPrimitive());
                     paramTypes.add(long.class);
                 }
-            });
+            }
             Method m = cachedMethods.get(method);
             if (m == null) {
                 m = Arrays
@@ -141,8 +145,29 @@ public class PlayerProxy {
                 cachedMethods.put(method, m);
 
             }
-
-            if (method.equalsIgnoreCase("setSpectateTarget")) {
+            if (method.equals("getUID") || method.equals("getUID2") || method.equals("IP") || method.equals("getUniqueId")) {
+                if (method.equals("getUID")) {
+                    V8Value uid = ServerEventHandler.entityConverter.convertToV8Value(v8, p.getUID());
+                    ServerProxy.closeSyncBlock();
+                    return uid;
+                }
+                if (method.equals("getUID2")) {
+                    V8Value uid = ServerEventHandler.entityConverter.convertToV8Value(v8, p.getUID2());
+                    ServerProxy.closeSyncBlock();
+                    return uid;
+                }
+                if (method.equals("getUniqueId")) {
+                    V8Value uid = ServerEventHandler.entityConverter.convertToV8Value(v8, p.getUniqueId());
+                    ServerProxy.closeSyncBlock();
+                    return uid;
+                }
+                if (method.equals("getIP")) {
+                    V8Value ip = ServerEventHandler.entityConverter.convertToV8Value(v8, p.getIP());
+                    ServerProxy.closeSyncBlock();
+                    return ip;
+                }
+            }
+            else if (method.equalsIgnoreCase("setSpectateTarget")) {
                 if (lst.get(0) == null) {
                     p.setSpectateTarget(null);
                     ServerProxy.closeSyncBlock();
@@ -166,16 +191,26 @@ public class PlayerProxy {
                 ServerProxy.closeSyncBlock();
                 return pid;
 
-            } else if (method.equals("isStreamedForPlayer")) {
+            }
+            else if (method.equals("set3DArrowForPlayer")) {
+                Player target = ServerEventHandler.server.getPlayer((int) lst.get(0));
+                p.set3DArrowForPlayer(target, (boolean) lst.get(1));
+                ServerProxy.closeSyncBlock();
+
+                return null;
+            }
+            else if (method.equals("isStreamedForPlayer")) {
                 boolean v = false;
                 if (lst.get(0) == null) {
 
-                    v = p.isStreamedForPlayer(null);
+                     v = p.isStreamedForPlayer(null);
                     ServerProxy.closeSyncBlock();
+
                     return v;
                 }
                 Player target = ServerEventHandler.server.getPlayer((int) lst.get(0));
                 v = p.isStreamedForPlayer(target);
+
                 ServerProxy.closeSyncBlock();
                 return v;
             } else if (method.equals("putInVehicle")) {
@@ -226,9 +261,9 @@ public class PlayerProxy {
                 } else if (method.equals("getAimDirection")) {
                     vec = p.getAimDirection();
                 }
-                obj.setProperty("x", ServerEventHandler.entityConverter.toV8Value(v8, vec.x));
-                obj.setProperty("y", ServerEventHandler.entityConverter.toV8Value(v8, vec.y));
-                obj.setProperty("z", ServerEventHandler.entityConverter.toV8Value(v8, vec.z));
+                obj.setProperty("x", ServerEventHandler.entityConverter.convertToV8Value(v8, vec.x));
+                obj.setProperty("y", ServerEventHandler.entityConverter.convertToV8Value(v8, vec.y));
+                obj.setProperty("z", ServerEventHandler.entityConverter.convertToV8Value(v8, vec.z));
                 ServerProxy.closeSyncBlock();
                 return obj;
 

@@ -10,7 +10,7 @@ A Node.js plugin for VCMP built with Javet.
 You can check out a sample script [here](https://github.com/AroliSG/vcmp-nodejs-server-sample)
 
 # Usage
-- Download and install JDK8
+- Download and install JDK8 [here](https://www.openlogic.com/openjdk-downloads?field_java_parent_version_target_id=416&field_operating_system_target_id=All&field_architecture_target_id=All&field_java_package_target_id=396)
 - Download the setup script [here](https://github.com/newk5/NodeJSPluginSetup/releases)
 -   Extract the files on the zip file to folder where you want your server files to be
 -   Run Setup.bat (Setup.sh on linux)

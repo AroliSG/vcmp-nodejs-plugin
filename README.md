@@ -21,3 +21,6 @@ You can check out a sample script [here](https://github.com/AroliSG/vcmp-nodejs-
 - Custom event handlers added.
 - Custom commands handlers added.
 - much more features have been added, don't remember tho.
+
+
+check full commits files here -> [changes](https://github.com/AroliSG/vcmp-nodejs-plugin/blob/master/commit_changes.txt)

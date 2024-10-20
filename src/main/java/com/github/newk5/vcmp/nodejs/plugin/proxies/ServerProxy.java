@@ -29,8 +29,17 @@ import com.maxorator.vcmp.java.plugin.integration.server.Server;
 import com.maxorator.vcmp.java.plugin.integration.server.SyncBlock;
 import com.maxorator.vcmp.java.plugin.integration.server.WastedSettings;
 import com.maxorator.vcmp.java.plugin.integration.vehicle.Vehicle;
+
+import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardWatchEventKinds;
+import java.nio.file.WatchEvent;
+import java.nio.file.WatchKey;
+import java.nio.file.WatchService;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,6 +49,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import vlsi.utils.CompactHashMap;
 import com.caoccao.javet.interop.V8Host;
+import com.caoccao.javet.interop.V8Runtime;
 public class ServerProxy {
 
     private static CompactHashMap<String, Method> cachedMethods = new CompactHashMap<>();
@@ -87,34 +97,46 @@ public class ServerProxy {
                 + "server.getCheckPoint = function ( arg0 ){ if (__ServerProxy.checkPointExists(arg0)) { return  " + chObj + ";  } return null;   };\n"
                 + "server.createCheckPoint = function ( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10 ){  const id =  __ServerProxy.run('createCheckPoint', [arg0== null ? null: arg0.id, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10] );  return  " + chObjId + ";  };"
             ).executeVoid();
-        }
-        catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            ServerEventHandler.exception(e);
         }
     }
 
     public void sendClientMessage(Integer player, String msg) {
-        syncThread();
-        Player target = ServerEventHandler.server.getPlayer(player);
-        ServerEventHandler.server.sendClientMessage(target, 16777215, msg);
-        closeSyncBlock();
+        try {
+            syncThread();
+            Player target = ServerEventHandler.server.getPlayer(player);
+            ServerEventHandler.server.sendClientMessage(target, 16777215, msg);
+            closeSyncBlock();
+        } catch (Exception e) {
+            ServerEventHandler.exception(e);
+            closeSyncBlock();
+        }
     }
 
     public void sendClientMessageToAll(String msg) {
-        syncThread();
-        ServerEventHandler.server.sendClientMessageToAll(msg);
-        closeSyncBlock();
+        try {
+            syncThread();
+            ServerEventHandler.server.sendClientMessageToAll(msg);
+            closeSyncBlock();
+        } catch (Exception e) {
+            ServerEventHandler.exception(e);
+            closeSyncBlock();
+        }
     }
 
     public void createExplosion(int worldId, int type, float x, float y, float z, Integer responsiblePlayer, boolean atGroundLevel) {
-        syncThread();
-        System.out.println("createExplosion" + worldId +","+ type +","+ x +","+ y +","+ z +","+ responsiblePlayer+","+ atGroundLevel);
-        ServerEventHandler.server.createExplosion(worldId, type, x, y, z, responsiblePlayer == null ? null : ServerEventHandler.server.getPlayer(responsiblePlayer), atGroundLevel);
-        closeSyncBlock();
+        try {
+            syncThread();
+            ServerEventHandler.server.createExplosion(worldId, type, x, y, z, responsiblePlayer == null ? null : ServerEventHandler.server.getPlayer(responsiblePlayer), atGroundLevel);
+            closeSyncBlock();
+        } catch (Exception e) {
+            ServerEventHandler.exception(e);
+            closeSyncBlock();
+        }
     }
 
     public V8ValueArray getJSVehIdsArray() {
-
         try {
             syncThread();
             V8ValueArray arr = v8.createV8ValueArray();
@@ -123,18 +145,16 @@ public class ServerProxy {
                     forEach(i -> {
                         try {
                             arr.push(i);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
+                        } catch (Exception e) {
+                            ServerEventHandler.exception(e);
                         }
                     });
             closeSyncBlock();
             return arr;
         } catch (Exception e) {
-            closeSyncBlock();
-            e.printStackTrace();
+            ServerEventHandler.exception(e);
             return null;
         }
-
     }
 
     public V8ValueArray getJSPlayerIdsArray() {
@@ -148,15 +168,14 @@ public class ServerProxy {
                     forEach(i -> {
                         try {
                             arr.push(i);
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
+                        } catch (Exception e) {
+                            ServerEventHandler.exception(e);
                         }
                     });
             closeSyncBlock();
             return arr;
         } catch (Exception e) {
-            closeSyncBlock();
-            e.printStackTrace();
+            ServerEventHandler.exception(e);
             return null;
         }
 
@@ -207,7 +226,7 @@ public class ServerProxy {
         closeSyncBlock();
         return id;
     }
-    
+
     public void gc(){
         v8.lowMemoryNotification();
     }
@@ -326,19 +345,19 @@ public class ServerProxy {
                 KeyBind kb = (KeyBind) o;
                 V8ValueObject obj = v8.createV8ValueObject();
 
-                obj.setProperty("keys", ServerEventHandler.entityConverter.toV8Value(v8, kb.keys));
-                obj.setProperty("id", ServerEventHandler.entityConverter.toV8Value(v8, kb.id));
-                obj.setProperty("boolean", ServerEventHandler.entityConverter.toV8Value(v8, kb.onRelease));
+                obj.setProperty("keys", ServerEventHandler.entityConverter.convertToV8Value(v8, kb.keys));
+                obj.setProperty("id", ServerEventHandler.entityConverter.convertToV8Value(v8, kb.id));
+                obj.setProperty("boolean", ServerEventHandler.entityConverter.convertToV8Value(v8, kb.onRelease));
                 closeSyncBlock();
                 return obj;
 
             } else if (methodName.equals("getWorldBounds")) {
                 MapBounds mb = (MapBounds) o;
                 V8ValueObject obj = v8.createV8ValueObject();
-                obj.setProperty("maxX", ServerEventHandler.entityConverter.toV8Value(v8, mb.maxX));
-                obj.setProperty("maxY", ServerEventHandler.entityConverter.toV8Value(v8, mb.maxY));
-                obj.setProperty("minX", ServerEventHandler.entityConverter.toV8Value(v8, mb.minX));
-                obj.setProperty("minY", ServerEventHandler.entityConverter.toV8Value(v8, mb.minY));
+                obj.setProperty("maxX", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.maxX));
+                obj.setProperty("maxY", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.maxY));
+                obj.setProperty("minX", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.minX));
+                obj.setProperty("minY", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.minY));
                 closeSyncBlock();
                 return obj;
 
@@ -346,31 +365,31 @@ public class ServerProxy {
 
                 WastedSettings mb = (WastedSettings) o;
                 V8ValueObject obj = v8.createV8ValueObject();
-                obj.setProperty("corpseFadeDuration", ServerEventHandler.entityConverter.toV8Value(v8, mb.corpseFadeDuration));
-                obj.setProperty("corpseFadeStart", ServerEventHandler.entityConverter.toV8Value(v8, mb.corpseFadeStart));
-                obj.setProperty("deathTimeMillis", ServerEventHandler.entityConverter.toV8Value(v8, mb.deathTimeMillis));
-                obj.setProperty("fadeColour", ServerEventHandler.entityConverter.toV8Value(v8, mb.fadeColour.getHex()));
-                obj.setProperty("fadeInSpeed", ServerEventHandler.entityConverter.toV8Value(v8, mb.fadeInSpeed));
-                obj.setProperty("fadeOutSpeed", ServerEventHandler.entityConverter.toV8Value(v8, mb.fadeOutSpeed));
-                obj.setProperty("fadeTimeMillis", ServerEventHandler.entityConverter.toV8Value(v8, mb.fadeTimeMillis));
+                obj.setProperty("corpseFadeDuration", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.corpseFadeDuration));
+                obj.setProperty("corpseFadeStart", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.corpseFadeStart));
+                obj.setProperty("deathTimeMillis", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.deathTimeMillis));
+                obj.setProperty("fadeColour", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.fadeColour.getHex()));
+                obj.setProperty("fadeInSpeed", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.fadeInSpeed));
+                obj.setProperty("fadeOutSpeed", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.fadeOutSpeed));
+                obj.setProperty("fadeTimeMillis", ServerEventHandler.entityConverter.convertToV8Value(v8, mb.fadeTimeMillis));
                 closeSyncBlock();
                 return obj;
             } else if (methodName.equals("getCoordBlipInfo")) {
                 CoordBlipInfo coord = (CoordBlipInfo) o;
                 V8ValueObject obj = v8.createV8ValueObject();
-                obj.setProperty("colour", ServerEventHandler.entityConverter.toV8Value(v8, coord.colour.getHex()));
-                obj.setProperty("id", ServerEventHandler.entityConverter.toV8Value(v8, coord.index));
+                obj.setProperty("colour", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.colour.getHex()));
+                obj.setProperty("id", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.index));
 
                 V8ValueObject vec = v8.createV8ValueObject();
 
-                vec.setProperty("x", ServerEventHandler.entityConverter.toV8Value(v8, coord.position.x));
-                vec.setProperty("y", ServerEventHandler.entityConverter.toV8Value(v8, coord.position.y));
-                vec.setProperty("z", ServerEventHandler.entityConverter.toV8Value(v8, coord.position.z));
+                vec.setProperty("x", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.position.x));
+                vec.setProperty("y", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.position.y));
+                vec.setProperty("z", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.position.z));
 
                 obj.setProperty("position", vec);
-                obj.setProperty("scale", ServerEventHandler.entityConverter.toV8Value(v8, coord.scale));
-                obj.setProperty("spriteId", ServerEventHandler.entityConverter.toV8Value(v8, coord.spriteId));
-                obj.setProperty("worldId", ServerEventHandler.entityConverter.toV8Value(v8, coord.worldId));
+                obj.setProperty("scale", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.scale));
+                obj.setProperty("spriteId", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.spriteId));
+                obj.setProperty("worldId", ServerEventHandler.entityConverter.convertToV8Value(v8, coord.worldId));
                 closeSyncBlock();
                 return obj;
             } else if (methodName.equals("createObject")) {
@@ -388,9 +407,8 @@ public class ServerProxy {
             }
             closeSyncBlock();
             return o;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            System.out.println("exception running " + methodName);
+        } catch (Exception e) {
+            ServerEventHandler.exception(e);
         }
         return null;
     }

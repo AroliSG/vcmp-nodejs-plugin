@@ -5,7 +5,6 @@ import com.maxorator.vcmp.java.plugin.integration.server.Server;
 import vlsi.utils.CompactHashMap;
 
 public class Context {
-
     static CompactHashMap<String, Boolean> functionMap = new CompactHashMap<>();
 
     public static NodeRuntime v8;
@@ -35,10 +34,10 @@ public class Context {
     }
 
     public static boolean playerUpdateFunctionsExist() {
-        return functionExists("onPlayerWeaponChange")
-                || functionExists("onPlayerHealthChange")
-                || functionExists("onPlayerArmourChange")
-                || functionExists("onPlayerMove");
+        return functionExists("onPlayerWeaponChange") ||
+              functionExists("onPlayerHealthChange") ||
+             functionExists("onPlayerArmourChange") ||
+            functionExists("onPlayerMove");
     }
 
 }

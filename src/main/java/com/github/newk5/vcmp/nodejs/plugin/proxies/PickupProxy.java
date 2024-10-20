@@ -77,9 +77,9 @@ public class PickupProxy {
                 if (vec == null) {
                     return null;
                 }
-                obj.setProperty("x", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.x));
-                obj.setProperty("y", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.y));
-                obj.setProperty("z", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.z));
+                obj.setProperty("x", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.x));
+                obj.setProperty("y", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.y));
+                obj.setProperty("z", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.z));
                 return obj;
             }
             ServerProxy.closeSyncBlock();

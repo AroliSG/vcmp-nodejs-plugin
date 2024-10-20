@@ -14,9 +14,6 @@ import com.caoccao.javet.values.reference.V8ValueObject;
 import com.github.newk5.vcmp.nodejs.plugin.Context;
 import static com.github.newk5.vcmp.nodejs.plugin.Context.v8;
 import com.github.newk5.vcmp.nodejs.plugin.ServerEventHandler;
-import static com.github.newk5.vcmp.nodejs.plugin.ServerEventHandler.objectJs;
-import static com.github.newk5.vcmp.nodejs.plugin.ServerEventHandler.playerJs;
-import static com.github.newk5.vcmp.nodejs.plugin.ServerEventHandler.vehicleJs;
 import com.maxorator.vcmp.java.plugin.integration.generic.Vector;
 import com.maxorator.vcmp.java.plugin.integration.placeable.GameObject;
 import com.maxorator.vcmp.java.plugin.integration.player.Player;
@@ -24,7 +21,6 @@ import com.maxorator.vcmp.java.plugin.integration.player.PlayerImmunity;
 import com.maxorator.vcmp.java.plugin.integration.player.PlayerImpl;
 import com.maxorator.vcmp.java.plugin.integration.vehicle.Vehicle;
 import java.lang.reflect.Method;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -35,51 +31,62 @@ public class PlayerProxy {
     private static CompactHashMap<String, Method> cachedMethods = new CompactHashMap<>();
     private static Method[] methods = PlayerImpl.class.getMethods();
 
-    public void sendStream(Integer id, byte[] b) throws JavetException {
-        ServerProxy.syncThread();
-        Player p = ServerEventHandler.server.getPlayer(id);
+    public void sendStream(Integer id, byte[] b) {
+        try {
+            ServerProxy.syncThread();
+            Player p = ServerEventHandler.server.getPlayer(id);
 
-        ServerEventHandler.server.sendScriptData(p, b);
-        ServerProxy.closeSyncBlock();
+            ServerEventHandler.server.sendScriptData(p, b);
+            ServerProxy.closeSyncBlock();
+        } catch (Exception e) {
+            ServerProxy.closeSyncBlock();
+            ServerEventHandler.exception(e);
+        }
     }
 
     public void removeImmunity(int id, int v) {
-        ServerProxy.syncThread();
-        Player p = ServerEventHandler.server.getPlayer(id);
-        if (p == null) {
-            System.out.println("Player.removeImmunity: no player found");
-            return;
-        }
-        PlayerImmunity i = p.getImmunities();
-        i.remove(v);
-        p.setImmunityFlags(i.hex);
-        ServerProxy.closeSyncBlock();
+        try {
+            ServerProxy.syncThread();
+            Player p = ServerEventHandler.server.getPlayer(id);
 
+            PlayerImmunity target = p.getImmunities();
+            target.remove(v);
+            p.setImmunityFlags(target.hex);
+            ServerProxy.closeSyncBlock();
+        } catch (Exception e) {
+            ServerProxy.closeSyncBlock();
+            ServerEventHandler.exception(e);
+        }
     }
 
     public boolean hasImmunity(int id, int v) {
-        ServerProxy.syncThread();
-        Player p = ServerEventHandler.server.getPlayer(id);
-        if (p == null) {
-            System.out.println("Player.hasImmunity: no player found");
+        try {
+            ServerProxy.syncThread();
+            Player p = ServerEventHandler.server.getPlayer(id);
+
+            ServerProxy.closeSyncBlock();
+            return p.getImmunities().has(v);
+        } catch (Exception e) {
+            ServerProxy.closeSyncBlock();
+            ServerEventHandler.exception(e);
+
             return false;
         }
-        ServerProxy.closeSyncBlock();
-        return p.getImmunities().has(v);
-
     }
-  
+
     public void addImmunity(int id, int v) {
-        ServerProxy.syncThread();
-        Player p = ServerEventHandler.server.getPlayer(id);
-        if (p == null) {
-            System.out.println("Player.addImmunity: no player found");
-            return;
+        try {
+            ServerProxy.syncThread();
+            Player p = ServerEventHandler.server.getPlayer(id);
+
+            PlayerImmunity target = p.getImmunities();
+            target.add(v);
+            p.setImmunityFlags(target.hex);
+            ServerProxy.closeSyncBlock();
+        } catch (Exception e) {
+            ServerProxy.closeSyncBlock();
+            ServerEventHandler.exception(e);
         }
-        PlayerImmunity i = p.getImmunities();
-        i.add(v);
-        p.setImmunityFlags(i.hex);
-        ServerProxy.closeSyncBlock();
     }
 
     public Object run(Integer id, String method, Object... args) {
@@ -268,19 +275,14 @@ public class PlayerProxy {
                 return obj;
 
             }
-            if (method.equals("setColour")) {
-                System.out.println("");
-            }
-
             Object o = m.invoke(p, lst.toArray());
 
             ServerProxy.closeSyncBlock();
             return o;
 
-        } catch (Exception ex) {
-            System.out.println("exception running " + method);
+        } catch (Exception e) {
             ServerProxy.closeSyncBlock();
-            ex.printStackTrace();
+            ServerEventHandler.exception(e);
         }
         return null;
     }

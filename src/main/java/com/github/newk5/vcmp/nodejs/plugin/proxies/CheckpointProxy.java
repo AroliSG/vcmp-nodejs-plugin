@@ -7,8 +7,6 @@ import com.caoccao.javet.values.primitive.V8ValueInteger;
 import com.caoccao.javet.values.primitive.V8ValueLong;
 import com.caoccao.javet.values.primitive.V8ValueNull;
 import com.caoccao.javet.values.primitive.V8ValueString;
-import com.caoccao.javet.values.reference.IV8ValueArray;
-import com.caoccao.javet.values.reference.IV8ValueObject;
 import com.caoccao.javet.values.reference.V8ValueArray;
 import com.caoccao.javet.values.reference.V8ValueObject;
 import com.github.newk5.vcmp.nodejs.plugin.Context;
@@ -38,7 +36,6 @@ public class CheckpointProxy {
             V8ValueArray arr = (V8ValueArray) args[0];
             List<Object> lst = new ArrayList<>();
 
- 
             for (int i = 0; i < arr.getLength(); i++) {
                 V8Value value = arr.get(i);
                 if (value instanceof V8ValueNull) {
@@ -55,7 +52,6 @@ public class CheckpointProxy {
                     lst.add(((V8ValueLong) value).toPrimitive());
                 }
             }
-            
             if (m == null) {
                 m = Arrays
                         .stream(methods)
@@ -94,9 +90,9 @@ public class CheckpointProxy {
                     return null;
                 }
                 ServerProxy.closeSyncBlock();
-                obj.setProperty("x", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.x));
-                obj.setProperty("y", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.y));
-                obj.setProperty("z", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.z));
+                obj.setProperty("x", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.x));
+                obj.setProperty("y", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.y));
+                obj.setProperty("z", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.z));
                 return obj;
             } else if (method.equals("getOwner")) {
                 Player target = (Player) m.invoke(p, lst.toArray());

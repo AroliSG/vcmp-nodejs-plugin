@@ -8,6 +8,7 @@ function fireEventCommand(args) {
     let target      = args[1];
     let message     = args[2];
     let prefix      = args[3];
+    let triggerWith = args[4];
     let delay       = options.commandDelayInSecs;
 
     const currentTime = new Date().getTime();
@@ -18,13 +19,18 @@ function fireEventCommand(args) {
         if (typeof options.commandDelayCallback === 'function') options.commandDelayCallback(target,delay,prefix,commandName);
         return false;
     }
-    const commandFound = registeredCommands.some(({ commandName: registeredCommand, commandAlias, execute, forcePrefixTo }) => {
+    const commandFound = registeredCommands.some(({
+        commandName: registeredCommand,
+        commandAlias,
+        execute,
+        forcePrefixTo,
+        executeWith
+    }) => {
+
             // command will only be executed if prefixes are the same.
             // only when forcePrefixTo is defined
-        if (forcePrefixTo&&forcePrefixTo !== prefix) {
-            if(typeof options.commandNotFoundCallback === 'function') options.commandNotFoundCallback(target,prefix,commandName);
-            return true;
-        }
+        if (executeWith && triggerWith && triggerWith !== executeWith) return false;
+        if (forcePrefixTo&&forcePrefixTo !== prefix) return false;
 
         const isExactMatch = registeredCommand === commandName;
         const isAliasMatch = commandAlias.includes(commandName);
@@ -39,31 +45,28 @@ function fireEventCommand(args) {
         return false;
     });
 
-        // global commands not found callback
+        // global commands not found callback-
     if (!commandFound && typeof options.commandNotFoundCallback === 'function') {
         options.commandNotFoundCallback(target,prefix,commandName);
     }
 }
 
-
 class CustomEventEmitter extends EventEmitter {
-    sEmit(event, ...args) {
-        const listeners         = this.listeners(event);
+    registerEvent(event, ...args) {
+            // returning boolean results from callbacks
+        const l     = this.listeners(event)[0];
+        const evt   = typeof l == 'function' && l(...args);
 
-        for (const listener of listeners) {
-            const result = listener(...args);
-            if (result !== undefined) {
-                return result;
-            }
-        }
+        if (l && evt !== undefined) return evt;
         return null;
     }
     registerCommand(name, options = {}) {
         const defaultOptions = {
             commandAlias: [],
             caseSensitive: false,
-            forcePrefixTo: null,
-            execute: null,
+            forcePrefixTo: undefined,
+            execute: undefined,
+            executeWith: null
         };
 
             // default 'false' which means no case sensitive
@@ -83,53 +86,26 @@ class CustomEventEmitter extends EventEmitter {
         }
         else VCMP.Server.Prefixes = prefixes;
     }
+    triggerCommand(arrayArgs){
+        fireEventCommand(arrayArgs);
+    }
 }
 
-const EventHandler = new CustomEventEmitter();
+const handler = new CustomEventEmitter();
 
-    // server events
-function onServerLoadScripts() {return EventHandler.sEmit("LoadScripts");}
-function onServerInitialise() {return EventHandler.sEmit("Initialise");}
-function onServerUnloadScripts() {return EventHandler.sEmit("UnloadScripts");}
-function onServerShutdown() {return EventHandler.sEmit("Shutdown");}
-function onPlayerConnect(p) {return EventHandler.sEmit("Connection", p);}
-function onPlayerDisconnect(p, reason) {return EventHandler.sEmit("Disconnect", p, reason);}
+function onPlayerDeath(p, k, r, b) {
+    if (k) return handler.registerEvent("Kill", p, k, r, b);
+    return handler.registerEvent("Death", p, r);
+}
+
 function onPlayerCommand(p, msg) {
     let args = msg
         .slice(0)
         .trim()
         .split(/ +/g)
-    , command = args.shift().toLowerCase();
-    fireEventCommand([command, p, args, '/']);
-
-  // if (VCMP.Server.Prefixes.length >= 1 && VCMP.Server.Prefixes.length <= 3) return EventHandler.sEmit("createCommand", p, message);
-  // return EventHandler.sEmit("Command", p, msg);
+    , command = args.shift();
+    fireEventCommand([command, p, args, '/', "vcmp"]);
 }
-function onPlayerSpawn(p) {return EventHandler.sEmit("Spawn", p);}
-function onPlayerRequestSpawn(p) {return EventHandler.sEmit("RequestSpawn", p);}
-function onPlayerDeath(p, k, r, b) {
- EventHandler.sEmit("Death", p, r);
-}
-function onPlayerEnterVehicle(p, v, s) {return EventHandler.sEmit("EnterVehicle", p, v, s);}
-function onPlayerExitVehicle(p, v) {return EventHandler.sEmit("ExitVehicle", p, v);}
-function onVehicleExplode(v) {return EventHandler.sEmit("VehicleExplode", v);}
-function onPlayerCrashReport(p, c) {return EventHandler.sEmit("CrashReport", p, c);}
-function onCheckPointExited(c, p) {return EventHandler.sEmit("CheckPointExited", c, p);}
-function onCheckPointEntered(c, p) {return EventHandler.sEmit("CheckPointEntered", c, p);}
-function onPickupRespawn(pp) {return EventHandler.sEmit("PickupRespawn", pp);}
-function onPickupPicked(pp, p) {return EventHandler.sEmit("PickupPicked", pp, p);}
-function onPickupPickAttempt(pp, p) {return EventHandler.sEmit("PickupPickAttempt", pp, p);}
-function onObjectTouched(o, p) {return EventHandler.sEmit("ObjTouched", o, p);}
-function onObjectShot(o, p, w) {return EventHandler.sEmit("ObjShot", o, p, w);}
-function onVehicleRespawn(v) {return EventHandler.sEmit("VehicleRespawn", v);}
-function onVehicleUpdate(v, u) {return EventHandler.sEmit("VehicleUpdate", v, u);}
-function onPlayerSpectate(p, s) {
-    return EventHandler.sEmit("Spectate", p, s);
-}
-
-function onPlayerKeyBindUp(p, k) {return EventHandler.sEmit("KeyUp", p, k);}
-function onPlayerKeyBindDown(p, k) {return EventHandler.sEmit("KeyDown", p, k);}
-function onPlayerPrivateMessage(p, r, m) {return EventHandler.sEmit("PrivateMessage", p, r, m);}
 
 function onPlayerMessage(p, m) {
     let args    = m
@@ -144,24 +120,67 @@ function onPlayerMessage(p, m) {
 
         // if prefix is not valid
         // make sure prefix matches a predefined prefix
-    if(isValidPrefixes) fireEventCommand([command, p, args, prefix])
+    if(isValidPrefixes) fireEventCommand([command, p, args, prefix, "vcmp"])
 
         // based on this we will output a text chat or not
     if(isValidPrefixes && VCMP.Server.commandOptions.disableCmdTextOutput) return false;
-    return EventHandler.sEmit("Message", p, m);
+    return handler.registerEvent("Message", p, m);
 }
-function onPlayerAwayChange(p, afk) {return EventHandler.sEmit("AFKChanges", p, afk);}
-function onPlayerEndTyping(p) {return EventHandler.sEmit("EndTyping", p);}
-function onPlayerBeginTyping(p) {return EventHandler.sEmit("BeginTyping", p);}
-function onPlayerGameKeysChange(p, o, n) {return EventHandler.sEmit("KeyPress", p, o, n);}
-function onPlayerCrouchChange(p, c) {return EventHandler.sEmit("isCrouching", p, c);}
-function onPlayerOnFireChange(p, f) {return EventHandler.sEmit("isOnFire", p, f);}
-function onPlayerActionChange(p, o, n) {return EventHandler.sEmit("isOnAction", p, o, n);}
-function onPlayerStateChange(p, o, n) {return EventHandler.sEmit("StateChanges", p, o, n);}
-function onPlayerNameChange(p, o, n) {return EventHandler.sEmit("NameChanges", p, o, n);}
-function onPlayerRequestEnterVehicle(p, v, s) {return EventHandler.sEmit("RequestEnterVehicle", p, v, s);}
-function onPlayerRequestClass(p, c) {return EventHandler.sEmit("RequestClass", p, c);}
-function onPlayerModuleList(p, l) {return EventHandler.sEmit("ModuleList", p, l);}
-function onClientScriptData(p, s) {return EventHandler.sEmit("BeginTyping", p, s);}
-function onIncomingConnection(n, p, ip) {return EventHandler.sEmit("Incoming", n, p, ip );}
+
+function onPlayerPrivateMessage(p, r, m) {return handler.registerEvent("PrivateMessage", p, r, m);}
+
+    // server events
+function onServerLoadScripts() {return handler.registerEvent("LoadScripts");}
+function onServerInitialise() {return handler.registerEvent("Init");}
+function onServerUnloadScripts() {return handler.registerEvent("UnloadScripts");}
+function onServerShutdown() {return handler.registerEvent("Shutdown");}
+
+function onPlayerConnect(p) {return handler.registerEvent("Connected", p);}
+function onPlayerDisconnect(p, reason) {return handler.registerEvent("Disconnected", p, reason);}
+
+function onPlayerSpawn(p) {return handler.registerEvent("Spawn", p);}
+function onPlayerRequestSpawn(p) {return handler.registerEvent("RequestSpawn", p);}
+
+function onPlayerEnterVehicle(p, v, s) {return handler.registerEvent("EnterVehicle", p, v, s);}
+function onPlayerRequestEnterVehicle(p, v, s) {return handler.registerEvent("RequestEnterVehicle", p, v, s);}
+function onPlayerExitVehicle(p, v) {return handler.registerEvent("ExitVehicle", p, v);}
+
+function onPlayerKeyBindUp(p, k) {return handler.registerEvent("KeyUp", p, k);}
+function onPlayerKeyBindDown(p, k) {return handler.registerEvent("KeyDown", p, k);}
+
+function onPlayerCrashReport(p, c) {return handler.registerEvent("CrashReport", p, c);}
+
+function onPlayerEndTyping(p) {return handler.registerEvent("EndTyping", p);}
+function onPlayerBeginTyping(p) {return handler.registerEvent("BeginTyping", p);}
+
+function onPlayerSpectate(p, s) {return handler.registerEvent("Spectate", p, s);}
+
+
+function onPlayerAwayChange(p, afk) {return handler.registerEvent("AFKChanges", p, afk);}
+
+function onPlayerGameKeysChange(p, o, n) {return handler.registerEvent("KeyChanges", p, o, n);}
+function onPlayerCrouchChange(p, c) {return handler.registerEvent("isCrouching", p, c);}
+function onPlayerOnFireChange(p, f) {return handler.registerEvent("isOnFire", p, f);}
+function onPlayerActionChange(p, o, n) {return handler.registerEvent("isOnAction", p, o, n);}
+function onPlayerStateChange(p, o, n) {return handler.registerEvent("StateChanges", p, o, n);}
+function onPlayerNameChange(p, o, n) {return handler.registerEvent("NameChanges", p, o, n);}
+
+function onPlayerRequestClass(p, c) {return handler.registerEvent("RequestClass", p, c);}
+function onPlayerModuleList(p, l) {return handler.registerEvent("ModuleList", p, l);}
+
+function onCheckPointExited(c, p) {return handler.registerEvent("CheckPointExited", c, p);}
+function onCheckPointEntered(c, p) {return handler.registerEvent("CheckPointEntered", c, p);}
+
+function onPickupRespawn(pp) {return handler.registerEvent("PickupRespawn", pp);}
+function onPickupPicked(pp, p) {return handler.registerEvent("PickupCollected", pp, p);}
+function onPickupPickAttempt(pp, p) {return handler.registerEvent("PickupAttempted", pp, p);}
+
+function onObjectTouched(o, p) {return handler.registerEvent("ObjTouched", o, p);}
+function onObjectShot(o, p, w) {return handler.registerEvent("ObjShot", o, p, w);}
+
+function onVehicleExplode(v) {return handler.registerEvent("VehicleExplode", v);}
+function onVehicleRespawn(v) {return handler.registerEvent("VehicleRespawn", v);}
+
+function onClientScriptData(p, s) {return handler.registerEvent("ScriptData", p, s);}
+function onIncomingConnection(n, p, ip) {return handler.registerEvent("Incoming", n, p, ip );}
 

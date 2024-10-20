@@ -86,8 +86,8 @@ public class VehicleProxy {
                 ServerProxy.closeSyncBlock();
                 if (ord != null) {
                     V8ValueObject obj = Context.v8.createV8ValueObject();
-                    obj.setProperty("horizontal", ServerEventHandler.entityConverter.toV8Value(Context.v8, ord.horizontal));
-                    obj.setProperty("vertical", ServerEventHandler.entityConverter.toV8Value(Context.v8, ord.vertical));
+                    obj.setProperty("horizontal", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, ord.horizontal));
+                    obj.setProperty("vertical", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, ord.vertical));
                     return obj;
 
                 }
@@ -98,8 +98,8 @@ public class VehicleProxy {
                 ServerProxy.closeSyncBlock();
                 if (vec != null) {
                     V8ValueObject obj = Context.v8.createV8ValueObject();
-                    obj.setProperty("primary", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.primary));
-                    obj.setProperty("secondary", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.secondary));
+                    obj.setProperty("primary", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.primary));
+                    obj.setProperty("secondary", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.secondary));
                     return obj;
 
                 }
@@ -141,9 +141,9 @@ public class VehicleProxy {
                 if (vec == null) {
                     return null;
                 }
-                obj.setProperty("x", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.x));
-                obj.setProperty("y", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.y));
-                obj.setProperty("z", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.z));
+                obj.setProperty("x", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.x));
+                obj.setProperty("y", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.y));
+                obj.setProperty("z", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.z));
                 return obj;
             } else if (method.equals("getRotation") || method.equals("getSpawnRotation")) {
                 Quaternion vec = (Quaternion) m.invoke(p, lst.toArray());
@@ -152,18 +152,17 @@ public class VehicleProxy {
                 if (vec == null) {
                     return null;
                 }
-                obj.setProperty("x", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.x));
-                obj.setProperty("y", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.y));
-                obj.setProperty("z", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.z));
-                obj.setProperty("w", ServerEventHandler.entityConverter.toV8Value(Context.v8, vec.w));
+                obj.setProperty("x", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.x));
+                obj.setProperty("y", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.y));
+                obj.setProperty("z", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.z));
+                obj.setProperty("w", ServerEventHandler.entityConverter.convertToV8Value(Context.v8, vec.w));
                 return obj;
             }
             ServerProxy.closeSyncBlock();
             return m.invoke(p, lst.toArray());
-        } catch (Exception ex) {
+        } catch (Exception e) {
             ServerProxy.closeSyncBlock();
-            ex.printStackTrace();
-            System.out.println("exception running " + method);
+            ServerEventHandler.exception(e);
         }
         return null;
     }

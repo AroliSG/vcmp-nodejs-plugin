@@ -98,17 +98,16 @@ const server ={
     getPlayerLimit : function( ) { return __ServerProxy.run('getPlayerLimit', Array.from(arguments)); },
     sendGameMessage : function( arg0, arg1, arg2 ) {return __ServerProxy.run('sendGameMessage', Array.from(arguments)); },
     getGameModeText : function( ) { return __ServerProxy.run('getGameModeText', Array.from(arguments)); },
-    shutdownServer : function( ) { return __ServerProxy.run('shutdownServer', Array.from(arguments)); },
+    shutdownServer : function( ) { process.exit(0); }, // return __ServerProxy.run('shutdownServer', Array.from(arguments)); },
 
         // methods that can take strings and numbers
     isWeaponDataValueModified : function( arg0, arg1 ) { return WeaponCommon('isWeaponDataValueModified', arg0, arg1); },
     getWeaponDataValue : function( arg0, arg1 ) { return WeaponCommon('getWeaponDataValue', arg0, arg1); },
     resetWeaponDataValue : function( arg0, arg1 ) { return WeaponCommon('resetWeaponDataValue', arg0, arg1); },
     setWeaponDataValue : function( arg0, arg1, arg2 ) { return WeaponCommon('setWeaponDataValue', arg0, arg1, arg2); },
-    resetWeaponData : function( arg0 ) {
-        let op  = arg0;
-        if(typeof arg0 === 'string') op = VCMP.Weapon[op];
-        return __ServerProxy.run('resetWeaponData', [op]);
+    resetWeaponData : function( dt ) {
+        if(typeof dt === 'string') dt = VCMP.Weapon[dt];
+        return __ServerProxy.run('resetWeaponData', [dt]);
     },
     createExplosion : function( arg0, arg1, arg2, arg3, arg4, arg5, arg6  ) {
         let playerId    = arg5;
@@ -118,21 +117,22 @@ const server ={
 
         return __ServerProxy.createExplosion(arg0, op, arg2, arg3, arg4, playerId, arg6);
     },
-    getOption : function( arg0 ) {
-        let op = arg0;
-        if(typeof arg0 === 'string') op = VCMP.Server.Option[op];
-        return __ServerProxy.run('getOption', [op]);
+    getOption : function( dt ) {
+        if (typeof dt === 'string') dt = VCMP.Server.Option[dt];
+        if (Array.isArray(dt)) return dt.forEach(op => server.getOption(VCMP.Server.Option[op]));
+
+        return __ServerProxy.run('getOption', [dt]);
     },
-    setOption : function( arg0, arg1 ) {
-        let op = arg0;
-        if(typeof arg0 === 'string') op = VCMP.Server.Option[op];
-        return __ServerProxy.run('setOption', [op, arg1]);
+    setOption : function(dt, bool) {
+        if (typeof dt === 'string') dt = VCMP.Server.Option[dt];
+        if (Array.isArray(dt)) return dt.forEach(op => server.setOption(VCMP.Server.Option[op], bool));
+
+        return __ServerProxy.run('setOption', [dt, bool]);
     },
-    config: function(list, bool) {
-        if (typeof list === 'object') list.forEach(op => server.setOption(VCMP.Server.Option[op], bool));
-    },
-    events: EventHandler,
+
+    reload: function () { __ServerProxy.reload();},
     gc: function () { return __ServerProxy.gc(); },
+    events: handler,
 };
 
 process.on('uncaughtException', (err, origin) => {

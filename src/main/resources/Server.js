@@ -53,7 +53,7 @@ const server ={
     addRadioStream : function( arg0, arg1, arg2, arg3 ) { return __ServerProxy.run('addRadioStream', Array.from(arguments)); },
     setMinute : function( arg0 ) { return __ServerProxy.run('setMinute', Array.from(arguments)); },
     setWaterLevel : function( arg0 ) { return __ServerProxy.run('setWaterLevel', Array.from(arguments)); },
-    getPlayer : function( arg0 ) { return __ServerProxy.run('getPlayer', Array.from(arguments)); },
+
     createVehicle : function(...args) { return __ServerProxy.run('createVehicle', Array.from(arguments));},
     getVehicle : function( arg0 ) { return __ServerProxy.run('getVehicle', Array.from(arguments)); },
     createCoordBlip : function( arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7 ) { return __ServerProxy.run('createCoordBlip', Array.from(arguments)); },
@@ -65,6 +65,11 @@ const server ={
     banAddress : function( arg0 ) { return __ServerProxy.run('banAddress', Array.from(arguments)); },
     hideMapObject : function( arg0, arg1, arg2, arg3 ) { return __ServerProxy.run('hideMapObject', Array.from(arguments)); },
     findPlayer : function( arg0 ) { return __ServerProxy.run('findPlayer', Array.from(arguments)); },
+    getPlayer : function( arg0 ) { return __ServerProxy.run('getPlayer', Array.from(arguments)); },
+    lookupPlayer: ( arg0 )=>{
+        if (typeof arg0 === 'number') return server.getPlayer(arg0);
+        return server.findPlayer(arg0);
+    },
     setHandlingRule : function( arg0, arg1, arg2 ) { __ServerProxy.run('setHandlingRule', Array.from(arguments)); },
     getMinute : function( ) { return __ServerProxy.run('getMinute', Array.from(arguments)); },
     getWorldBounds : function( ) { return __ServerProxy.run('getWorldBounds', Array.from(arguments)); },
@@ -99,7 +104,6 @@ const server ={
     sendGameMessage : function( arg0, arg1, arg2 ) {return __ServerProxy.run('sendGameMessage', Array.from(arguments)); },
     getGameModeText : function( ) { return __ServerProxy.run('getGameModeText', Array.from(arguments)); },
     shutdownServer : function( ) { process.exit(0); }, // return __ServerProxy.run('shutdownServer', Array.from(arguments)); },
-
         // methods that can take strings and numbers
     isWeaponDataValueModified : function( arg0, arg1 ) { return WeaponCommon('isWeaponDataValueModified', arg0, arg1); },
     getWeaponDataValue : function( arg0, arg1 ) { return WeaponCommon('getWeaponDataValue', arg0, arg1); },

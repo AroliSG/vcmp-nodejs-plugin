@@ -64,12 +64,6 @@ var a = {
     getScore : function ( ){ return  __PlayerProxy.run(this.id, 'getScore', Array.from(arguments)); },
     getUID : function ( ){ return  __PlayerProxy.run(this.id, 'getUID', Array.from(arguments)).toString(); },
     setImmunityFlags : function ( arg0 ){  __PlayerProxy.run(this.id, 'setImmunityFlags', Array.from(arguments)); },
-    lookupPlayer: ( arg0 )=>{
-        if (typeof arg0 === 'number') return server.getPlayer(arg0);
-        return server.findPlayer(arg0);
-    },
-
-
     getColour : function ( ){ 
         let v =  __PlayerProxy.run(this.id, 'getColour', []); 
         if (Array.from(arguments).length >0){

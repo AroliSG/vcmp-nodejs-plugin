@@ -1,3 +1,8 @@
+## Lastest Features 1.1.2
+> What's new?
+- lookupPlayer -> takes integer and string; server.lookupPlayer("");
+
+
 ## Lastest Features 1.1.1
 
 > Commands Handler [Guide Me](www.example.com)

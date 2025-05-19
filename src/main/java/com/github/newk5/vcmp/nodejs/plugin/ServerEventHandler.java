@@ -45,7 +45,7 @@ public class ServerEventHandler extends RootEventHandler {
     public static String pickupJs = "";
 
     private String tempPlayerVar    = "__tempPlayer";
-    private String version          = "v1.1.1";
+    private String version          = "v1.1.2";
 
     private AtomicBoolean eventLoopStarted = new AtomicBoolean(false);
     private PlayerUpdateEvents playerUpdateEvents;

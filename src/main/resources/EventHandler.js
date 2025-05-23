@@ -130,8 +130,19 @@ function onPlayerMessage(p, m) {
 function onPlayerPrivateMessage(p, r, m) {return handler.registerEvent("PrivateMessage", p, r, m);}
 
     // server events
-function onServerLoadScripts() {return handler.registerEvent("LoadScripts");}
-function onServerInitialise() {return handler.registerEvent("Init");}
+function onServerLoadScripts() {
+    return handler.registerEvent("LoadScripts");
+};
+
+function onServerInitialise() {
+        // development mode
+    let devToggle = server.getDevMode();
+    if (devToggle === "auto") devToggle = process.platform === "win32";
+    if (devToggle) DevelopmentMode();
+
+    return handler.registerEvent("Init");
+};
+
 function onServerUnloadScripts() {return handler.registerEvent("UnloadScripts");}
 function onServerShutdown() {return handler.registerEvent("Shutdown");}
 

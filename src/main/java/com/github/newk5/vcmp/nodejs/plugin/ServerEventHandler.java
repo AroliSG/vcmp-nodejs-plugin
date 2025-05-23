@@ -6,6 +6,7 @@ import com.github.newk5.vcmp.nodejs.plugin.proxies.PlayerProxy;
 import com.caoccao.javet.exceptions.JavetExecutionException;
 import com.caoccao.javet.interop.V8Host;
 import com.caoccao.javet.interop.executors.IV8Executor;
+import com.caoccao.javet.interop.options.NodeRuntimeOptions;
 import com.caoccao.javet.node.modules.NodeModuleModule;
 import com.caoccao.javet.values.V8Value;
 import com.caoccao.javet.values.primitive.V8ValueBoolean;
@@ -45,7 +46,7 @@ public class ServerEventHandler extends RootEventHandler {
     public static String pickupJs = "";
 
     private String tempPlayerVar    = "__tempPlayer";
-    private String version          = "v1.1.2";
+    private String version          = "v1.1.3";
 
     private AtomicBoolean eventLoopStarted = new AtomicBoolean(false);
     private PlayerUpdateEvents playerUpdateEvents;
@@ -58,6 +59,7 @@ public class ServerEventHandler extends RootEventHandler {
         entityConverter = new EntityConverter();
 
         try {
+            NodeRuntimeOptions.NODE_FLAGS.setExperimentalSqlite(true);
             V8Host host = V8Host.getNodeInstance();
             v8 = host.createV8Runtime();
             v8.allowEval(true);
@@ -90,32 +92,31 @@ public class ServerEventHandler extends RootEventHandler {
             v8.getExecutor(resources.readResource("byte-buffer.min.js")).executeVoid();
             v8.getExecutor(resources.readResource("VCMPStream.js")).executeVoid();
 
-            V8ValueString dirname   = v8.createV8ValueString(new File("").getAbsolutePath() + File.separator + "src");
-            V8ValueString filename  = v8.createV8ValueString(new File("").getAbsolutePath() + File.separator + "src" + File.separator + "main.js");
+            try (V8ValueString dirname = v8.createV8ValueString(new File("").getAbsolutePath() + File.separator + "src");
+                V8ValueString filename = v8.createV8ValueString(new File("").getAbsolutePath() + File.separator + "src" + File.separator + "main.js")) {
 
-            v8.getGlobalObject().setProperty("__version", version);
-            v8.getGlobalObject().setProperty("__dirname", dirname);
-            v8.getGlobalObject().setProperty("__filename", filename);
+                v8.getGlobalObject().setProperty("__version", version);
+                v8.getGlobalObject().setProperty("__dirname", dirname);
+                v8.getGlobalObject().setProperty("__filename", filename);
+
+                this.playerJs       = resources.readResource("Player.js");
+                this.checkpointJs   = resources.readResource("Checkpoint.js");
+                this.objectJs       = resources.readResource("Object.js");
+                this.pickupJs       = resources.readResource("Pickup.js");
+                this.vehicleJs      = resources.readResource("Vehicle.js");
 
 
-            this.playerJs       = resources.readResource("Player.js");
-            this.checkpointJs   = resources.readResource("Checkpoint.js");
-            this.objectJs       = resources.readResource("Object.js");
-            this.pickupJs       = resources.readResource("Pickup.js");
-            this.vehicleJs      = resources.readResource("Vehicle.js");
+                v8.getExecutor(resources.readResource("DevelopmentMode.js")).executeVoid();
+                v8.getExecutor(resources.readResource("Parser.js")).executeVoid();
+                v8.getExecutor(resources.readResource("VCMPGlobals.js")).executeVoid();
+                v8.getExecutor(resources.readResource("EventHandler.js")).executeVoid();
+                v8.getExecutor(resources.readResource("CheckForUpdates.js")).executeVoid();
+                v8.getExecutor(resources.readResource("Server.js")).executeVoid();
+                init();
 
-            v8.getExecutor(resources.readResource("VCMPGlobals.js")).executeVoid();
-            v8.getExecutor(resources.readResource("EventHandler.js")).executeVoid();
-            v8.getExecutor(resources.readResource("CheckForUpdates.js")).executeVoid();
-            v8.getExecutor(resources.readResource("Server.js")).executeVoid();
-            init();
-
-            if (Context.playerUpdateFunctionsExist()) playerUpdateEvents = new PlayerUpdateEvents(this);
-            org.pmw.tinylog.Logger.info("Node.js context initialized");
-
-            dirname.close();
-            filename.close();
-
+                if (Context.playerUpdateFunctionsExist()) playerUpdateEvents = new PlayerUpdateEvents(this);
+                // org.pmw.tinylog.Logger.info("Node.js context initialized");
+            }
         } catch (Exception e) {
             exception(e);
         }

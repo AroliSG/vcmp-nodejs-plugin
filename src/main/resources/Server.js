@@ -1,4 +1,5 @@
-const WeaponCommon = (name,arg0,arg1,arg2) => {
+const map = new Map();
+const WeaponUtils = (name,arg0,arg1,arg2) => {
     let op  = arg0;
     let op1 = arg1;
     if(typeof arg0 === 'string') op = VCMP.Weapon[op];
@@ -6,10 +7,15 @@ const WeaponCommon = (name,arg0,arg1,arg2) => {
     let arr = [op,op1];
     if(arg2) arr.push(arg2);
     return __ServerProxy.run(name, arr);
-}
+};
 
     // global variables
 const server ={
+        // dev mode
+    setDevMode : function( arg0 ) { map.set('devMode', arg0);},
+    getDevMode : function( ) { return map.get('devMode'); },
+
+        // server methods
     getObject : function( arg0 ) { return __ServerProxy.run('getObject', Array.from(arguments)); },
     createObject : function( arg0, arg1, arg2, arg3 ) { return __ServerProxy.run('createObject', Array.from(arguments)); },
     handlingRuleExists : function( arg0, arg1 ) { return __ServerProxy.run('handlingRuleExists', Array.from(arguments)); },
@@ -105,10 +111,10 @@ const server ={
     getGameModeText : function( ) { return __ServerProxy.run('getGameModeText', Array.from(arguments)); },
     shutdownServer : function( ) { process.exit(0); }, // return __ServerProxy.run('shutdownServer', Array.from(arguments)); },
         // methods that can take strings and numbers
-    isWeaponDataValueModified : function( arg0, arg1 ) { return WeaponCommon('isWeaponDataValueModified', arg0, arg1); },
-    getWeaponDataValue : function( arg0, arg1 ) { return WeaponCommon('getWeaponDataValue', arg0, arg1); },
-    resetWeaponDataValue : function( arg0, arg1 ) { return WeaponCommon('resetWeaponDataValue', arg0, arg1); },
-    setWeaponDataValue : function( arg0, arg1, arg2 ) { return WeaponCommon('setWeaponDataValue', arg0, arg1, arg2); },
+    isWeaponDataValueModified : function( arg0, arg1 ) { return WeaponUtils('isWeaponDataValueModified', arg0, arg1); },
+    getWeaponDataValue : function( arg0, arg1 ) { return WeaponUtils('getWeaponDataValue', arg0, arg1); },
+    resetWeaponDataValue : function( arg0, arg1 ) { return WeaponUtils('resetWeaponDataValue', arg0, arg1); },
+    setWeaponDataValue : function( arg0, arg1, arg2 ) { return WeaponUtils('setWeaponDataValue', arg0, arg1, arg2); },
     resetWeaponData : function( dt ) {
         if(typeof dt === 'string') dt = VCMP.Weapon[dt];
         return __ServerProxy.run('resetWeaponData', [dt]);
@@ -139,10 +145,23 @@ const server ={
     events: handler,
 };
 
+
+ // troubleshooting crashes
+Object.defineProperty(server, 'serverName', {
+  get() {
+    return __ServerProxy.run('getServerName', []);
+  },
+  set(name) {
+    __ServerProxy.run('setServerName', [name]);
+  },
+  enumerable: true,
+  configurable: true
+});
+
 process.on('uncaughtException', (err, origin) => {
     console.log(err.stack);
     require("fs").writeFileSync(
-        "uncaughtException.txt",
+        "logs/uncaughtException.txt",
         `Caught exception: ${err.stack}\n`
     );
 });
